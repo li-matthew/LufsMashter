@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Controls
 
 /// A SwiftUI Slider container which is bound to an ObservableAUParameter
 ///
@@ -13,28 +14,12 @@ import SwiftUI
 struct ParameterSlider: View {
     @State var param: ObservableAUParameter
     
-    var specifier: String {
-        switch param.unit {
-        case .midiNoteNumber:
-            return "%.0f"
-        default:
-            return "%.2f"
-        }
-    }
-    
     var body: some View {
         VStack {
-            Slider(
-                value: $param.value,
-                in: param.min...param.max,
-                onEditingChanged: param.onEditingChanged,
-                minimumValueLabel: Text("\(param.min, specifier: specifier)"),
-                maximumValueLabel: Text("\(param.max, specifier: specifier)")
-            ) {
-                EmptyView()
-            }
+            ArcKnob("s", value: $param.value, range: param.min...param.max)
             .accessibility(identifier: param.displayName)
-            Text("\(param.displayName): \(param.value, specifier: specifier)")
+            Text("\(param.displayName): \(param.value)")
+            LufsRollingView()
         }
         .padding()
     }

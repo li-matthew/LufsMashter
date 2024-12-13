@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		9D8F9D112D0BB7C200E53EB3 /* LufsMashterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		9DAC174E2D0C27C900E39AB3 /* AudioKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9DAC174D2D0C27C900E39AB3 /* AudioKitUI */; };
+		9DAC17512D0C2CD100E39AB3 /* Controls in Frameworks */ = {isa = PBXBuildFile; productRef = 9DAC17502D0C2CD100E39AB3 /* Controls */; };
+		9DAC17542D0C2F0900E39AB3 /* Controls in Frameworks */ = {isa = PBXBuildFile; productRef = 9DAC17532D0C2F0900E39AB3 /* Controls */; };
+		9DAC17A32D0C32BB00E39AB3 /* AudioKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9DAC17A22D0C32BB00E39AB3 /* AudioKitUI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,6 +113,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DAC17512D0C2CD100E39AB3 /* Controls in Frameworks */,
+				9DAC174E2D0C27C900E39AB3 /* AudioKitUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -130,6 +136,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9DAC17A32D0C32BB00E39AB3 /* AudioKitUI in Frameworks */,
+				9DAC17542D0C2F0900E39AB3 /* Controls in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +151,7 @@
 				9D8F9CFD2D0BB7C200E53EB3 /* LufsMashterTests */,
 				9D8F9D072D0BB7C200E53EB3 /* LufsMashterUITests */,
 				9D8F9D142D0BB7C200E53EB3 /* LufsMashterExtension */,
+				9DAC17522D0C2F0900E39AB3 /* Frameworks */,
 				9D8F9CD22D0BB7C100E53EB3 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -156,6 +165,13 @@
 				9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9DAC17522D0C2F0900E39AB3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -180,6 +196,8 @@
 			);
 			name = LufsMashter;
 			packageProductDependencies = (
+				9DAC174D2D0C27C900E39AB3 /* AudioKitUI */,
+				9DAC17502D0C2CD100E39AB3 /* Controls */,
 			);
 			productName = LufsMashter;
 			productReference = 9D8F9CD12D0BB7C100E53EB3 /* LufsMashter.app */;
@@ -248,6 +266,8 @@
 			);
 			name = LufsMashterExtension;
 			packageProductDependencies = (
+				9DAC17532D0C2F0900E39AB3 /* Controls */,
+				9DAC17A22D0C32BB00E39AB3 /* AudioKitUI */,
 			);
 			productName = LufsMashterExtension;
 			productReference = 9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */;
@@ -288,6 +308,10 @@
 			);
 			mainGroup = 9D8F9CC82D0BB7C100E53EB3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				9DAC174C2D0C27C900E39AB3 /* XCRemoteSwiftPackageReference "AudioKitUI" */,
+				9DAC174F2D0C2CD100E39AB3 /* XCRemoteSwiftPackageReference "Controls" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9D8F9CD22D0BB7C100E53EB3 /* Products */;
 			projectDirPath = "";
@@ -815,6 +839,48 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		9DAC174C2D0C27C900E39AB3 /* XCRemoteSwiftPackageReference "AudioKitUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKitUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.3.7;
+			};
+		};
+		9DAC174F2D0C2CD100E39AB3 /* XCRemoteSwiftPackageReference "Controls" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/Controls.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		9DAC174D2D0C27C900E39AB3 /* AudioKitUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9DAC174C2D0C27C900E39AB3 /* XCRemoteSwiftPackageReference "AudioKitUI" */;
+			productName = AudioKitUI;
+		};
+		9DAC17502D0C2CD100E39AB3 /* Controls */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9DAC174F2D0C2CD100E39AB3 /* XCRemoteSwiftPackageReference "Controls" */;
+			productName = Controls;
+		};
+		9DAC17532D0C2F0900E39AB3 /* Controls */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9DAC174F2D0C2CD100E39AB3 /* XCRemoteSwiftPackageReference "Controls" */;
+			productName = Controls;
+		};
+		9DAC17A22D0C32BB00E39AB3 /* AudioKitUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9DAC174C2D0C27C900E39AB3 /* XCRemoteSwiftPackageReference "AudioKitUI" */;
+			productName = AudioKitUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 9D8F9CC92D0BB7C100E53EB3 /* Project object */;
 }

@@ -39,8 +39,8 @@ public:
     // MARK: - Parameter Getter / Setter
     void setParameter(AUParameterAddress address, AUValue value) {
         switch (address) {
-            case LufsMashterExtensionParameterAddress::gain:
-                mGain = value;
+            case LufsMashterExtensionParameterAddress::dbs:
+                mDbs = value;
                 break;
                 // Add a case for each parameter in LufsMashterExtensionParameterAddresses.h
         }
@@ -50,8 +50,8 @@ public:
         // Return the goal. It is not thread safe to return the ramping value.
         
         switch (address) {
-            case LufsMashterExtensionParameterAddress::gain:
-                return (AUValue)mGain;
+            case LufsMashterExtensionParameterAddress::dbs:
+                return (AUValue)mDbs;
                 
             default: return 0.f;
         }
@@ -109,8 +109,9 @@ public:
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 
+                
                 // Do your sample by sample dsp here...
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mGain;
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
             }
         }
     }
@@ -135,7 +136,7 @@ public:
     AUHostMusicalContextBlock mMusicalContextBlock;
     
     double mSampleRate = 44100.0;
-    double mGain = 1.0;
+    double mDbs = 1.0;
     bool mBypassed = false;
     AUAudioFrameCount mMaxFramesToRender = 1024;
 };

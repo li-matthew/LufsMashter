@@ -11,12 +11,12 @@ import AudioToolbox
 let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
     ParameterGroupSpec(identifier: "global", name: "Global") {
         ParameterSpec(
-            address: .gain,
-            identifier: "gain",
-            name: "Output Gain",
-            units: .linearGain,
-            valueRange: 0.0...1.0,
-            defaultValue: 0.25
+            address: .dbs,
+            identifier: "dbs",
+            name: "Target dBs",
+            units: .decibels,
+            valueRange: 0.0...100.0,
+            defaultValue: 10
         )
     }
 }
