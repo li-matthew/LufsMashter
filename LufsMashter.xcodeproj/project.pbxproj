@@ -1,0 +1,820 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		9D8F9D112D0BB7C200E53EB3 /* LufsMashterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		9D8F9CFB2D0BB7C200E53EB3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D8F9CC92D0BB7C100E53EB3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D8F9CD02D0BB7C100E53EB3;
+			remoteInfo = LufsMashter;
+		};
+		9D8F9D052D0BB7C200E53EB3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D8F9CC92D0BB7C100E53EB3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D8F9CD02D0BB7C100E53EB3;
+			remoteInfo = LufsMashter;
+		};
+		9D8F9D122D0BB7C200E53EB3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9D8F9CC92D0BB7C100E53EB3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9D8F9D0F2D0BB7C200E53EB3;
+			remoteInfo = LufsMashterExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9D8F9D422D0BB7C200E53EB3 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9D8F9D112D0BB7C200E53EB3 /* LufsMashterExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		9D8F9CD12D0BB7C100E53EB3 /* LufsMashter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LufsMashter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D8F9CFA2D0BB7C200E53EB3 /* LufsMashterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LufsMashterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D8F9D042D0BB7C200E53EB3 /* LufsMashterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LufsMashterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LufsMashterExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9D8F9D3B2D0BB7C200E53EB3 /* Exceptions for "LufsMashterExtension" folder in "LufsMashterExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9D8F9D0F2D0BB7C200E53EB3 /* LufsMashterExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		9D8F9D3F2D0BB7C200E53EB3 /* Exceptions for "LufsMashterExtension" folder in "Copy Bundle Resources" phase from "LufsMashterExtension" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 9D8F9D0E2D0BB7C200E53EB3 /* Resources */;
+			membershipExceptions = (
+				Common/DSP/LufsMashterExtensionAUProcessHelper.hpp,
+				Common/DSP/LufsMashterExtensionBufferedAudioBus.hpp,
+				DSP/LufsMashterExtensionDSPKernel.hpp,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LufsMashter;
+			sourceTree = "<group>";
+		};
+		9D8F9CFD2D0BB7C200E53EB3 /* LufsMashterTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LufsMashterTests;
+			sourceTree = "<group>";
+		};
+		9D8F9D072D0BB7C200E53EB3 /* LufsMashterUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LufsMashterUITests;
+			sourceTree = "<group>";
+		};
+		9D8F9D142D0BB7C200E53EB3 /* LufsMashterExtension */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9D8F9D3B2D0BB7C200E53EB3 /* Exceptions for "LufsMashterExtension" folder in "LufsMashterExtension" target */,
+				9D8F9D3F2D0BB7C200E53EB3 /* Exceptions for "LufsMashterExtension" folder in "Copy Bundle Resources" phase from "LufsMashterExtension" target */,
+			);
+			path = LufsMashterExtension;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9D8F9CCE2D0BB7C100E53EB3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9CF72D0BB7C200E53EB3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D012D0BB7C200E53EB3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D0D2D0BB7C200E53EB3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		9D8F9CC82D0BB7C100E53EB3 = {
+			isa = PBXGroup;
+			children = (
+				9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */,
+				9D8F9CFD2D0BB7C200E53EB3 /* LufsMashterTests */,
+				9D8F9D072D0BB7C200E53EB3 /* LufsMashterUITests */,
+				9D8F9D142D0BB7C200E53EB3 /* LufsMashterExtension */,
+				9D8F9CD22D0BB7C100E53EB3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		9D8F9CD22D0BB7C100E53EB3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				9D8F9CD12D0BB7C100E53EB3 /* LufsMashter.app */,
+				9D8F9CFA2D0BB7C200E53EB3 /* LufsMashterTests.xctest */,
+				9D8F9D042D0BB7C200E53EB3 /* LufsMashterUITests.xctest */,
+				9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9D8F9CD02D0BB7C100E53EB3 /* LufsMashter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D8F9D432D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashter" */;
+			buildPhases = (
+				9D8F9CCD2D0BB7C100E53EB3 /* Sources */,
+				9D8F9CCE2D0BB7C100E53EB3 /* Frameworks */,
+				9D8F9CCF2D0BB7C100E53EB3 /* Resources */,
+				9D8F9D422D0BB7C200E53EB3 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9D8F9D132D0BB7C200E53EB3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */,
+			);
+			name = LufsMashter;
+			packageProductDependencies = (
+			);
+			productName = LufsMashter;
+			productReference = 9D8F9CD12D0BB7C100E53EB3 /* LufsMashter.app */;
+			productType = "com.apple.product-type.application";
+		};
+		9D8F9CF92D0BB7C200E53EB3 /* LufsMashterTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D8F9D462D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterTests" */;
+			buildPhases = (
+				9D8F9CF62D0BB7C200E53EB3 /* Sources */,
+				9D8F9CF72D0BB7C200E53EB3 /* Frameworks */,
+				9D8F9CF82D0BB7C200E53EB3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9D8F9CFC2D0BB7C200E53EB3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9D8F9CFD2D0BB7C200E53EB3 /* LufsMashterTests */,
+			);
+			name = LufsMashterTests;
+			packageProductDependencies = (
+			);
+			productName = LufsMashterTests;
+			productReference = 9D8F9CFA2D0BB7C200E53EB3 /* LufsMashterTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		9D8F9D032D0BB7C200E53EB3 /* LufsMashterUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D8F9D492D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterUITests" */;
+			buildPhases = (
+				9D8F9D002D0BB7C200E53EB3 /* Sources */,
+				9D8F9D012D0BB7C200E53EB3 /* Frameworks */,
+				9D8F9D022D0BB7C200E53EB3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9D8F9D062D0BB7C200E53EB3 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9D8F9D072D0BB7C200E53EB3 /* LufsMashterUITests */,
+			);
+			name = LufsMashterUITests;
+			packageProductDependencies = (
+			);
+			productName = LufsMashterUITests;
+			productReference = 9D8F9D042D0BB7C200E53EB3 /* LufsMashterUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		9D8F9D0F2D0BB7C200E53EB3 /* LufsMashterExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9D8F9D3C2D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterExtension" */;
+			buildPhases = (
+				9D8F9D0C2D0BB7C200E53EB3 /* Sources */,
+				9D8F9D0D2D0BB7C200E53EB3 /* Frameworks */,
+				9D8F9D0E2D0BB7C200E53EB3 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				9D8F9D142D0BB7C200E53EB3 /* LufsMashterExtension */,
+			);
+			name = LufsMashterExtension;
+			packageProductDependencies = (
+			);
+			productName = LufsMashterExtension;
+			productReference = 9D8F9D102D0BB7C200E53EB3 /* LufsMashterExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9D8F9CC92D0BB7C100E53EB3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1610;
+				LastUpgradeCheck = 1610;
+				TargetAttributes = {
+					9D8F9CD02D0BB7C100E53EB3 = {
+						CreatedOnToolsVersion = 16.1;
+					};
+					9D8F9CF92D0BB7C200E53EB3 = {
+						CreatedOnToolsVersion = 16.1;
+						TestTargetID = 9D8F9CD02D0BB7C100E53EB3;
+					};
+					9D8F9D032D0BB7C200E53EB3 = {
+						CreatedOnToolsVersion = 16.1;
+						TestTargetID = 9D8F9CD02D0BB7C100E53EB3;
+					};
+					9D8F9D0F2D0BB7C200E53EB3 = {
+						CreatedOnToolsVersion = 16.1;
+					};
+				};
+			};
+			buildConfigurationList = 9D8F9CCC2D0BB7C100E53EB3 /* Build configuration list for PBXProject "LufsMashter" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 9D8F9CC82D0BB7C100E53EB3;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 9D8F9CD22D0BB7C100E53EB3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9D8F9CD02D0BB7C100E53EB3 /* LufsMashter */,
+				9D8F9CF92D0BB7C200E53EB3 /* LufsMashterTests */,
+				9D8F9D032D0BB7C200E53EB3 /* LufsMashterUITests */,
+				9D8F9D0F2D0BB7C200E53EB3 /* LufsMashterExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		9D8F9CCF2D0BB7C100E53EB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9CF82D0BB7C200E53EB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D022D0BB7C200E53EB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D0E2D0BB7C200E53EB3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9D8F9CCD2D0BB7C100E53EB3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9CF62D0BB7C200E53EB3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D002D0BB7C200E53EB3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9D8F9D0C2D0BB7C200E53EB3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9D8F9CFC2D0BB7C200E53EB3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D8F9CD02D0BB7C100E53EB3 /* LufsMashter */;
+			targetProxy = 9D8F9CFB2D0BB7C200E53EB3 /* PBXContainerItemProxy */;
+		};
+		9D8F9D062D0BB7C200E53EB3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D8F9CD02D0BB7C100E53EB3 /* LufsMashter */;
+			targetProxy = 9D8F9D052D0BB7C200E53EB3 /* PBXContainerItemProxy */;
+		};
+		9D8F9D132D0BB7C200E53EB3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9D8F9D0F2D0BB7C200E53EB3 /* LufsMashterExtension */;
+			targetProxy = 9D8F9D122D0BB7C200E53EB3 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		9D8F9D3D2D0BB7C200E53EB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LufsMashterExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LufsMashterExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashter.LufsMashterExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "LufsMashterExtension/Common/LufsMashterExtension-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Debug;
+		};
+		9D8F9D3E2D0BB7C200E53EB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				CLANG_CXX_LIBRARY = "libc++";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LufsMashterExtension/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LufsMashterExtension;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashter.LufsMashterExtension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "LufsMashterExtension/Common/LufsMashterExtension-Bridging-Header.h";
+				SWIFT_OBJC_INTEROP_MODE = objcxx;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Release;
+		};
+		9D8F9D402D0BB7C200E53EB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		9D8F9D412D0BB7C200E53EB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		9D8F9D442D0BB7C200E53EB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LufsMashter/LufsMashter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LufsMashter/Preview Content\"";
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LufsMashter;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					AVFoundation,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashter;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Debug;
+		};
+		9D8F9D452D0BB7C200E53EB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LufsMashter/LufsMashter.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"LufsMashter/Preview Content\"";
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LufsMashter;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
+				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
+				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
+				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					AudioToolbox,
+					"-framework",
+					AVFoundation,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashter;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Release;
+		};
+		9D8F9D472D0BB7C200E53EB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LufsMashter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LufsMashter";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Debug;
+		};
+		9D8F9D482D0BB7C200E53EB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashterTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LufsMashter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LufsMashter";
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Release;
+		};
+		9D8F9D4A2D0BB7C200E53EB3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = LufsMashter;
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Debug;
+		};
+		9D8F9D4B2D0BB7C200E53EB3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6TY4S255Y7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				MACOSX_DEPLOYMENT_TARGET = 15.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = mash.LufsMashterUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = auto;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2,7";
+				TEST_TARGET_NAME = LufsMashter;
+				XROS_DEPLOYMENT_TARGET = 2.1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9D8F9CCC2D0BB7C100E53EB3 /* Build configuration list for PBXProject "LufsMashter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D8F9D402D0BB7C200E53EB3 /* Debug */,
+				9D8F9D412D0BB7C200E53EB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D8F9D3C2D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D8F9D3D2D0BB7C200E53EB3 /* Debug */,
+				9D8F9D3E2D0BB7C200E53EB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D8F9D432D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D8F9D442D0BB7C200E53EB3 /* Debug */,
+				9D8F9D452D0BB7C200E53EB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D8F9D462D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D8F9D472D0BB7C200E53EB3 /* Debug */,
+				9D8F9D482D0BB7C200E53EB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9D8F9D492D0BB7C200E53EB3 /* Build configuration list for PBXNativeTarget "LufsMashterUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9D8F9D4A2D0BB7C200E53EB3 /* Debug */,
+				9D8F9D4B2D0BB7C200E53EB3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9D8F9CC92D0BB7C100E53EB3 /* Project object */;
+}
