@@ -9,10 +9,12 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
+#import <stdlib.h>
 
 #include <vector>
 #include "LufsMashterExtensionDSPKernel.hpp"
 #include "LufsMashterExtensionBufferedAudioBus.hpp"
+#include "LufsAdapter.hpp"
 
 //MARK:- AUProcessHelper Utility Class
 class AUProcessHelper
@@ -28,6 +30,8 @@ public:
     {
         mInputBuffers.resize(inputChannelCount);
         mOutputBuffers.resize(outputChannelCount);
+        mLuffers.resize(inputChannelCount);
+//
     }
 
     /**
@@ -48,7 +52,11 @@ public:
             for (int channel = 0; channel < outBufferListPtr->mNumberBuffers; ++channel) {
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
-
+            
+            for (int channel = 0; channel < mLuffers.size(); ++channel) {
+                mLuffers[channel] = (float*)calloc(1024, sizeof(float));
+            }
+                
             mKernel.process(mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
@@ -147,5 +155,6 @@ private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
+    std::vector<float*> mLuffers;
     BufferedInputBus& mBufferedInputBus;
 };

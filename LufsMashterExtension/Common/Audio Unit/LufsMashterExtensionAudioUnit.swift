@@ -60,7 +60,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         }
     }
 
-    public override var  shouldBypassEffect: Bool {
+    public override var shouldBypassEffect: Bool {
         get {
             return kernel.isBypassed()
         }

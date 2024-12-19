@@ -12,16 +12,39 @@
 #import <vector>
 #import <span>
 
+#import <Accelerate/Accelerate.h>
+
+#import "LufsAdapter.hpp"
 #import "LufsMashterExtensionParameterAddresses.h"
+
 
 /*
  LufsMashterExtensionDSPKernel
  As a non-ObjC class, this is safe to use from render thread.
  */
+
+struct Biquad {
+    vDSP_biquad_Setup setup;
+    float delay[2 + (2 * 2)]; // 2 + (2 * stages)
+};
+
 class LufsMashterExtensionDSPKernel {
 public:
+    
     void initialize(int inputChannelCount, int outputChannelCount, double inSampleRate) {
         mSampleRate = inSampleRate;
+//        mLuffers.resize(inputChannelCount);
+        
+        for (int i = 0; i < inputChannelCount; i++) {
+//            memset(mLuffers[i], 0.0, 1024 * sizeof(float));
+            biquads.push_back((Biquad){
+                .setup = vDSP_biquad_CreateSetup(Coeffs, stages)
+            });
+            
+            for (int j = 0; j < 4; j++) {
+                biquads[i].delay[j] = 0.0;
+            }
+        }
     }
     
     void deInitialize() {
@@ -104,16 +127,24 @@ public:
          nullptr);	// currentMeasureDownbeatPosition
          }
          */
-        
         // Perform per sample dsp on the incoming float in before assigning it to out
+        //        for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
-            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-                
-                
-                // Do your sample by sample dsp here...
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
-            }
+            // Do your sample by sample dsp here...
+//            vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, coeffs, 0, 1);
+            
+            vDSP_biquad(biquads[channel].setup,
+                        biquads[channel].delay,
+                        inputBuffers[channel], 1,
+                        outputBuffers[channel], 1,
+                        frameCount);
+            
+//            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+//                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
+//            }
+            //                adapter.filterPhase(inputBuffers[channel][frameIndex], &outputBuffers[channel][frameIndex], channel);
         }
+        //        }
     }
     
     void handleOneEvent(AUEventSampleTime now, AURenderEvent const *event) {
@@ -135,8 +166,31 @@ public:
     // MARK: Member Variables
     AUHostMusicalContextBlock mMusicalContextBlock;
     
+    //    std::vector<LufsAdapter::FilterState> filterStates;
+    //    LufsAdapter::FilterCoefficients coeffs;
+    //    LufsAdapter lufsAdapter;
+    std::vector <Biquad> biquads;
+    
     double mSampleRate = 44100.0;
     double mDbs = 1.0;
+    int stages = 2;
+    double Coeffs[10] = {
+        1.53512948,         // b
+        -2.69169634,
+        1.19839281,
+        -1.69500495,        // a
+        0.73199158,
+        
+        1.0,         // b
+        -2.0,
+        1.0,
+        -1.99004745,        // a
+        0.990072250
+    };
     bool mBypassed = false;
     AUAudioFrameCount mMaxFramesToRender = 1024;
+    
+//    float temp[2][1024];
+//    std::vector<float> temp;
+    
 };
