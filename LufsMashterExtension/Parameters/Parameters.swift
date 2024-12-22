@@ -18,6 +18,14 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             valueRange: 0.0...100.0,
             defaultValue: 10
         )
+//        ParameterSpec(
+//            address: 0,
+//            identifier: "viz",
+//            name: "Visualization",
+//            units: .generic,
+//            valueRange: 0...1,
+//            defaultValue: 10
+//        )
     }
 }
 

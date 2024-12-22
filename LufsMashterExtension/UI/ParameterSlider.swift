@@ -18,6 +18,5 @@ struct ParameterSlider: View {
         ArcKnob("dBs", value: $param.value, range: param.min...param.max)
             .accessibility(identifier: param.displayName)
         Text("\(param.displayName): \(param.value)")
-//            .padding()
     }
 }

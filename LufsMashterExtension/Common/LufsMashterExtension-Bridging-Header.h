@@ -7,3 +7,4 @@
 
 #import "LufsMashterExtensionParameterAddresses.h"
 #import "LufsMashterExtensionAUProcessHelper.hpp"
+#import "LufsAdapter.h"

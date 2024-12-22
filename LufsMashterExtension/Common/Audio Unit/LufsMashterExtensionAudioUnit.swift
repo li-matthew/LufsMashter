@@ -6,6 +6,7 @@
 //
 
 import AVFoundation
+import Combine
 
 public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
 {
@@ -13,6 +14,8 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
 	var kernel = LufsMashterExtensionDSPKernel()
     var processHelper: AUProcessHelper?
     var inputBus = BufferedInputBus()
+    
+    var adapter: LufsAdapter?
 
 	private var outputBus: AUAudioUnitBus?
     private var _inputBusses: AUAudioUnitBusArray!
@@ -34,7 +37,23 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
 		_outputBusses = AUAudioUnitBusArray(audioUnit: self, busType: AUAudioUnitBusType.output, busses: [outputBus!])
         
         processHelper = AUProcessHelper(&kernel, &inputBus)
+        
+        adapter = LufsAdapter(processHelper: &processHelper!)
 	}
+
+    public func getLufsBuffer() -> [[Float]] {
+        guard let buffer = adapter!.getLufsBuffer() else {
+            return []
+        }
+        
+        let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
+        
+        return result
+    }
+    
+//    public func observeBuffer() -> AnyPublisher<[[Float]], Never> {
+//        bufferSubject.eraseToAnyPublisher()
+//    }
 
     public override var inputBusses: AUAudioUnitBusArray {
         return _inputBusses
@@ -113,7 +132,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
 		for param in parameterTree.allParameters {
             kernel.setParameter(param.address, param.value)
 		}
-
+        
 		setupParameterCallbacks()
 	}
 

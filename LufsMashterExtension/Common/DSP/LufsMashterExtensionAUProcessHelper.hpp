@@ -7,14 +7,24 @@
 
 #pragma once
 
+#ifdef __OBJC__
+    // If compiling with Objective-C++, we can use os_log
+    #import <os/log.h>
+    #define LOG(fmt, ...) os_log(OS_LOG_DEFAULT, "[DSP LOG] " fmt, ##__VA_ARGS__)
+#else
+    // If compiling in pure C++, use std::cout as fallback
+    #include <iostream>
+    #define LOG(fmt, ...) std::cout << "[DSP LOG] " << fmt << std::endl
+#endif
+
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
-#import <stdlib.h>
+#include <algorithm>
 
 #include <vector>
 #include "LufsMashterExtensionDSPKernel.hpp"
 #include "LufsMashterExtensionBufferedAudioBus.hpp"
-#include "LufsAdapter.hpp"
+//#include "LufsAdapter.hpp"
 
 //MARK:- AUProcessHelper Utility Class
 class AUProcessHelper
@@ -26,12 +36,30 @@ public:
     {
     }
     
+//    float * getLufs() {
+////        return 0.0;
+//        float temp[2] = { 0.0, 0.0};
+//        return temp;
+////        return mLuffers[0].data();
+//    }
+//    void getLufs(float* outputData, int maxFrames) {
+//        int framesToCopy = std::min(maxFrames, (int)mLuffers[0].size());
+//        std::copy(mLuffers[0].begin(), mLuffers[0].begin() + framesToCopy, outputData);
+//    }
+    
+    const std::vector<float*>& getLufsBuffer() const {
+        return mLuffers;
+    }
+//
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
     {
         mInputBuffers.resize(inputChannelCount);
         mOutputBuffers.resize(outputChannelCount);
         mLuffers.resize(inputChannelCount);
-//
+        
+        for (int channel = 0; channel < inputChannelCount; ++channel) {
+            mLuffers[channel] = new float[1024];
+        }
     }
 
     /**
@@ -52,12 +80,8 @@ public:
             for (int channel = 0; channel < outBufferListPtr->mNumberBuffers; ++channel) {
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
-            
-            for (int channel = 0; channel < mLuffers.size(); ++channel) {
-                mLuffers[channel] = (float*)calloc(1024, sizeof(float));
-            }
-                
-            mKernel.process(mInputBuffers, mOutputBuffers, now, frameCount);
+
+            mKernel.process(mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -151,10 +175,16 @@ public:
 			return noErr;
 		};
 	}
+    
+    
+    
+    
+    
 private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
+//    std::vector<std::vector<float*>*> mLuffers;
     std::vector<float*> mLuffers;
     BufferedInputBus& mBufferedInputBus;
 };

@@ -14,7 +14,7 @@
 
 #import <Accelerate/Accelerate.h>
 
-#import "LufsAdapter.hpp"
+//#import "LufsAdapter.hpp"
 #import "LufsMashterExtensionParameterAddresses.h"
 
 
@@ -100,7 +100,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(std::span<float*> luffers, std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -139,9 +139,18 @@ public:
                         outputBuffers[channel], 1,
                         frameCount);
             
-//            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-//                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
-//            }
+            
+            
+            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+//                float temp;
+                
+                luffers[channel][frameIndex] = outputBuffers[channel][frameIndex];
+//                luffers[channel].insert(outputBuffers[channel][frameIndex]);
+//                luffers[channel].pop_back();
+                vDSP_rmsqv(outputBuffers[channel], 1, luffers[channel], luffers.size());
+                
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
+            }
             //                adapter.filterPhase(inputBuffers[channel][frameIndex], &outputBuffers[channel][frameIndex], channel);
         }
         //        }

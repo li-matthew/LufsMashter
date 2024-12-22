@@ -76,7 +76,7 @@
 			membershipExceptions = (
 				Common/DSP/LufsMashterExtensionAUProcessHelper.hpp,
 				Common/DSP/LufsMashterExtensionBufferedAudioBus.hpp,
-				DSP/LufsAdapter.hpp,
+				DSP/LufsAdapter.mm,
 				DSP/LufsMashterExtensionDSPKernel.hpp,
 			);
 		};
