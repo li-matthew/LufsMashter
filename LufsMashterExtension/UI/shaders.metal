@@ -8,9 +8,15 @@
 #include <metal_stdlib>
 using namespace metal;
 
-vertex float4 vertexData(const device float2 *vertices [[ buffer(0) ]],
+constant uint bufferLength [[function_constant(0)]];
+
+vertex float4 vertexData(const device float *vertices [[ buffer(0) ]],
                           uint vertexID [[ vertex_id ]]) {
-    return float4(vertices[vertexID], 0.0, 1.0);
+    
+    float x = float(vertexID) / float(bufferLength - 1) * 2.0 - 1.0; // Map to [-1, 1]
+    float y = vertices[vertexID];
+    
+    return float4(x, y, 0.0, 1.0);
 }
 
 fragment float4 fragmentData() {

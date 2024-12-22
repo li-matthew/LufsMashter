@@ -16,6 +16,10 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     var LufsValues: [[Float]] = [[]]
     var vertexBuffer: MTLBuffer!
     
+    let constants = MTLFunctionConstantValues()
+    var length: UInt32 = 1024
+    
+    
     private var cancellables: Set<AnyCancellable> = []
     
     var metalView: ObservableLufsBuffer? {
@@ -36,16 +40,15 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
+        constants.setConstantValue(&length, type: .uint, index: 0)
         
         let library = try! device?.makeDefaultLibrary(bundle: Bundle.main)
-        
-
+            
         let fragmentFunction = library!.makeFunction(name: "fragmentData")!
-        let vertexFunction = library!.makeFunction(name: "vertexData")!
-        
-        
+        let vertexFunction = try! library!.makeFunction(name: "vertexData", constantValues: constants)
         pipelineStateDescriptor.vertexFunction = vertexFunction
         pipelineStateDescriptor.fragmentFunction = fragmentFunction
+        
         pipelineStateDescriptor.rasterSampleCount = 1
         
         let colorAttachment = pipelineStateDescriptor.colorAttachments[0]!
@@ -59,7 +62,9 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         pipelineState = try! device!.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
         
         super.init(frame: frameRect, device: device)
+        
         updateVertexBuffer()
+        
         clearColor = .init(red: 0.0, green: 0.0, blue: 0.0, alpha: 0)
 
         delegate = self
@@ -72,6 +77,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     
     func updateVertexBuffer() {
         let vertexData: [[Float]] = LufsValues
+        
         vertexBuffer = device!.makeBuffer(bytes: vertexData[0], length: vertexData[0].count * MemoryLayout<Float>.size, options: [])
     }
     
@@ -94,9 +100,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             renderEncoder?.setRenderPipelineState(pipelineState)
             renderEncoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
 
-            // Draw the line (primitive type: line strip, vertex count: 2)
-            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 4)
-
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
             renderEncoder?.endEncoding()
             commandBuffer?.present(drawable)
             commandBuffer?.commit()

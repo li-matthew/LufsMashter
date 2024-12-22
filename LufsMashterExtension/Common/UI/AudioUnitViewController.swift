@@ -71,8 +71,10 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     public func updateLufsBuffer() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
         let buffer = audioUnit.getLufsBuffer()
+        
         bufferSubject.send(buffer)
         luffers.buffer = buffer
+//        NSLog("\(luffers.buffer[0][700])")
     }
 
     deinit {

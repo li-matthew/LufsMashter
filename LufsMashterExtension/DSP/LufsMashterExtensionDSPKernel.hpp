@@ -133,11 +133,11 @@ public:
             // Do your sample by sample dsp here...
 //            vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, coeffs, 0, 1);
             
-            vDSP_biquad(biquads[channel].setup,
-                        biquads[channel].delay,
-                        inputBuffers[channel], 1,
-                        outputBuffers[channel], 1,
-                        frameCount);
+//            vDSP_biquad(biquads[channel].setup,
+//                        biquads[channel].delay,
+//                        inputBuffers[channel], 1,
+//                        outputBuffers[channel], 1,
+//                        frameCount);
             
             
             
@@ -147,9 +147,9 @@ public:
                 luffers[channel][frameIndex] = outputBuffers[channel][frameIndex];
 //                luffers[channel].insert(outputBuffers[channel][frameIndex]);
 //                luffers[channel].pop_back();
-                vDSP_rmsqv(outputBuffers[channel], 1, luffers[channel], luffers.size());
+//                vDSP_rmsqv(outputBuffers[channel], 1, luffers[channel], luffers.size());
                 
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
             }
             //                adapter.filterPhase(inputBuffers[channel][frameIndex], &outputBuffers[channel][frameIndex], channel);
         }

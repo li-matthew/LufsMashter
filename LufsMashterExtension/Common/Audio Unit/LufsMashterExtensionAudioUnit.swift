@@ -45,7 +45,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getLufsBuffer() else {
             return []
         }
-        
+//        NSLog("\(buffer[0][700])")
         let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
         
         return result
@@ -106,6 +106,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         }
 
         inputBus.allocateRenderResources(self.maximumFramesToRender);
+        NSLog("\(self.maximumFramesToRender)")
 
 		kernel.setMusicalContextBlock(self.musicalContextBlock)
         kernel.initialize(Int32(inputChannelCount), Int32(outputChannelCount), outputBus!.format.sampleRate)

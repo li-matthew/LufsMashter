@@ -12,7 +12,7 @@ struct LufsMashterExtensionMainView: View {
     var parameterTree: ObservableAUParameterGroup
     @ObservedObject var luffers: ObservableLufsBuffer
     
-    @State private var metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 10, height: 10))
+    @State private var metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
     
     var body: some View {
         VStack {
