@@ -11,7 +11,11 @@ import os
 import SwiftUI
 
 class ObservableLufsBuffer: ObservableObject {
-    @Published var buffer: [[Float]] = [[]]
+    @Published var buffer: [[Float]]
+    
+    init() {
+        buffer = Array(repeating: Array(repeating: 0.0, count: 1024), count: 2)
+    }
 }
 
 private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "AudioUnitViewController")

@@ -5,32 +5,16 @@
 //  Created by mashen on 12/11/24.
 //
 
-import AudioKit
-import Metal
-import Combine
 import MetalKit
-
-//public struct FragmentConstants {
-//    public var foregroundColor: SIMD4<Float>
-//    public var backgroundColor: SIMD4<Float>
-//    public var isFFT: Bool
-//    public var isCentered: Bool
-//    public var isFilled: Bool
-//
-//    // Padding is required because swift doesn't pad to alignment
-//    // like MSL does.
-//    public var padding: Int = 0
-//}
+import Combine
 
 public class MetalLufs: MTKView, MTKViewDelegate {
-//    let plotTexture: MTLTexture!
+    let testVertices: [Float] = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     let commandQueue: MTLCommandQueue!
     let pipelineState: MTLRenderPipelineState!
-    var vertexBuffer: MTLBuffer!
-//    let bufferSampleCount: Int
-//    var dataCallback: () -> [Float]
-//    var constants: FragmentConstants
+    
     var LufsValues: [[Float]] = [[]]
+    var vertexBuffer: MTLBuffer!
     
     private var cancellables: Set<AnyCancellable> = []
     
@@ -40,54 +24,42 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             metalView?.$buffer
                 .sink { [weak self] newData in
                     self?.LufsValues = newData
-//                    self?.updateVertexBuffer()
-//                    self?.setNeedsDisplay()
+                    self?.updateVertexBuffer()
+                    self?.setNeedsDisplay(self?.bounds ?? CGRect.zero)
                 }
                 .store(in: &cancellables)
         }
     }
     
-    public init(frame frameRect: CGRect
-//                constants: FragmentConstants,
-//                dataCallback: @escaping () -> [Float]
-    ) {
-//        self.dataCallback = dataCallback
-//        self.constants = constants
-//        bufferSampleCount = Int(frameRect.width)
-//        
-//        let desc = MTLTextureDescriptor()
-//        desc.textureType = .type1D
-//        desc.width = Int(frameRect.width)
-//        desc.pixelFormat = .r32Float
-//        assert(desc.height == 1)
-//        assert(desc.depth == 1)
+    public init(frame frameRect: CGRect) {
         
         let device = MTLCreateSystemDefaultDevice()
-//        plotTexture = device?.makeTexture(descriptor: desc)
         commandQueue = device!.makeCommandQueue()
+        let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
         
         let library = try! device?.makeDefaultLibrary(bundle: Bundle.main)
-
-        let fragmentProgram = library!.makeFunction(name: "plotFragment")!
-        let vertexProgram = library!.makeFunction(name: "plotVertex")!
         
-        let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
-        pipelineStateDescriptor.vertexFunction = vertexProgram
-        pipelineStateDescriptor.fragmentFunction = fragmentProgram
+
+        let fragmentFunction = library!.makeFunction(name: "fragmentData")!
+        let vertexFunction = library!.makeFunction(name: "vertexData")!
+        
+        
+        pipelineStateDescriptor.vertexFunction = vertexFunction
+        pipelineStateDescriptor.fragmentFunction = fragmentFunction
         pipelineStateDescriptor.rasterSampleCount = 1
         
-//        let colorAttachment = pipelineStateDescriptor.colorAttachments[0]!
-//        colorAttachment.pixelFormat = .bgra8Unorm
-//        colorAttachment.isBlendingEnabled = true
-//        colorAttachment.sourceRGBBlendFactor = .sourceAlpha
-//        colorAttachment.sourceAlphaBlendFactor = .sourceAlpha
-//        colorAttachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
-//        colorAttachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        let colorAttachment = pipelineStateDescriptor.colorAttachments[0]!
+        colorAttachment.pixelFormat = .bgra8Unorm
+        colorAttachment.isBlendingEnabled = true
+        colorAttachment.sourceRGBBlendFactor = .sourceAlpha
+        colorAttachment.sourceAlphaBlendFactor = .sourceAlpha
+        colorAttachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
+        colorAttachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
         
         pipelineState = try! device!.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
         
         super.init(frame: frameRect, device: device)
-        
+        updateVertexBuffer()
         clearColor = .init(red: 0.0, green: 0.0, blue: 0.0, alpha: 0)
 
         delegate = self
@@ -98,67 +70,35 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func updateGraphData(_ data: [[Float]]) {
-        // Update the amplitude data and re-render
-        LufsValues = data
-        updateVertexBuffer()
-        self.setNeedsDisplay(self.frame)  // Trigger a redraw
-    }
-    
     func updateVertexBuffer() {
         let vertexData: [[Float]] = LufsValues
         vertexBuffer = device!.makeBuffer(bytes: vertexData[0], length: vertexData[0].count * MemoryLayout<Float>.size, options: [])
     }
-    
-//    func updatePlot(samples: [Float]) {
-//        if samples.count == 0 {
-//            return
-//        }
-//        
-//        var resampled = [Float](repeating: 0, count: bufferSampleCount)
-//        
-//        for i in 0 ..< bufferSampleCount {
-//            let x = Float(i) / Float(bufferSampleCount) * Float(samples.count - 1)
-//            let j = Int(x)
-//            let fraction = x - Float(j)
-//            resampled[i] = samples[j] * (1.0 - fraction) + samples[j + 1] * fraction
-//        }
-//        
-//        samples.withUnsafeBytes { ptr in
-//            plotTexture.replace(region: MTLRegionMake1D(0, bufferSampleCount),
-//                                    mipmapLevel: 0,
-//                                    withBytes: ptr.baseAddress!,
-//                                    bytesPerRow: 0)
-//        }
-//    }
     
     public func mtkView(_: MTKView, drawableSizeWillChange _: CGSize) {
         // We may want to resize the texture.
     }
     
     public func draw(in view: MTKView) {
-        
-//        updatePlot(samples: dataCallback())
-//        
-        if let commandBuffer = commandQueue.makeCommandBuffer() {
-            if let renderPassDescriptor = currentRenderPassDescriptor {
-                guard let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor) else { return }
-                
-                encoder.setRenderPipelineState(pipelineState)
-//                encoder.setFragmentTexture(plotTexture, index: 0)
-                encoder.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-//                assert(MemoryLayout<FragmentConstants>.size == 48)
-//                encoder.setFragmentBytes(&constants, length: MemoryLayout<FragmentConstants>.size, index: 0)
-                encoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-                encoder.endEncoding()
-                
-                if let drawable = view.currentDrawable {
-                    commandBuffer.present(drawable)
-                }
+            guard let drawable = view.currentDrawable,
+                  let renderPassDescriptor = view.currentRenderPassDescriptor,
+                  let pipelineState = pipelineState,
+                  let commandQueue = commandQueue,
+                  let vertexBuffer = vertexBuffer else {
+                return
             }
-//            
-            commandBuffer.commit()
-            commandBuffer.waitUntilCompleted()
-        }
+
+            let commandBuffer = commandQueue.makeCommandBuffer()
+            let renderEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
+
+            renderEncoder?.setRenderPipelineState(pipelineState)
+            renderEncoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+
+            // Draw the line (primitive type: line strip, vertex count: 2)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 4)
+
+            renderEncoder?.endEncoding()
+            commandBuffer?.present(drawable)
+            commandBuffer?.commit()
     }
 }

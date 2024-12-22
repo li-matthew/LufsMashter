@@ -11,19 +11,17 @@ import Combine
 struct LufsMashterExtensionMainView: View {
     var parameterTree: ObservableAUParameterGroup
     @ObservedObject var luffers: ObservableLufsBuffer
-    //    @State private var audioBufferString: String = ""
+    
+    @State private var metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 10, height: 10))
     
     var body: some View {
         VStack {
-            ParameterSlider(param: parameterTree.global.dbs)
-
-            List(luffers.buffer, id: \.self) { row in
-                Text(row.map { String(format: "%.2f", $0) }.joined(separator: ", "))
-            }
+//            ParameterSlider(param: parameterTree.global.dbs)
+            
+            MetalLufsView(metalLufs: metalLufs)
+        }
+        .onAppear {
+            metalLufs.metalView = luffers
         }
     }
-    
-    //    var viz: MetalLufs {
-    //        return MetalLufs(frame: CGRect(x: 0, y: 0, width: Int(1024), height: 1024))
-    //    }
 }
