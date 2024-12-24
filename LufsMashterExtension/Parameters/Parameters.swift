@@ -14,18 +14,10 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             address: .dbs,
             identifier: "dbs",
             name: "Target dBs",
-            units: .decibels,
-            valueRange: 0.0...100.0,
-            defaultValue: 10
+            units: .generic,
+            valueRange: 0.0...1.0,
+            defaultValue: 0.0
         )
-//        ParameterSpec(
-//            address: 0,
-//            identifier: "viz",
-//            name: "Visualization",
-//            units: .generic,
-//            valueRange: 0...1,
-//            defaultValue: 10
-//        )
     }
 }
 
