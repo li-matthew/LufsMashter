@@ -11,5 +11,6 @@
 @property (nonatomic, readonly) AUProcessHelper * processHelper;
 - (instancetype)initWithProcessHelper:(AUProcessHelper*)existingProcessHelper;
 - (NSArray<NSArray<NSNumber*>*>*)getLufsBuffer;
+- (NSArray<NSArray<NSNumber*>*>*)getGainReduction;
 
 @end

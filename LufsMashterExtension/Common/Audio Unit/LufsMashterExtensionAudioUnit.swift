@@ -45,15 +45,19 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getLufsBuffer() else {
             return []
         }
-//        NSLog("\(buffer[0][700])")
         let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
         
         return result
     }
     
-//    public func observeBuffer() -> AnyPublisher<[[Float]], Never> {
-//        bufferSubject.eraseToAnyPublisher()
-//    }
+    public func getGainReduction() -> [[Float]] {
+        guard let buffer = adapter!.getGainReduction() else {
+            return []
+        }
+        let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
+        NSLog("\(result)")
+        return result
+    }
 
     public override var inputBusses: AUAudioUnitBusArray {
         return _inputBusses

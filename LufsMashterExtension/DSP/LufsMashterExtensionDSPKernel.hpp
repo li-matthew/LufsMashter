@@ -110,7 +110,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(std::span<float*>lufsFrame, std::span<float*> luffers, std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(std::span<float*> gainReduction, std::span<float*>lufsFrame, std::span<float*> luffers, std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -151,15 +151,26 @@ public:
                                     outputBuffers[channel], 1,
                                     frameCount);
             
-            std::copy_backward(lufsFrame[channel], lufsFrame[channel] + (17640 - frameCount), lufsFrame[channel] + 17640);
+            std::copy_backward(lufsFrame[channel], lufsFrame[channel] + (lufsWindow - frameCount), lufsFrame[channel] + lufsWindow);
             std::memcpy(lufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
             
             float rms;
             vDSP_rmsqv(lufsFrame[channel], 1, &rms, luffers.size());
             
-            if (rms > )
+            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
             
-            std::copy_backward(luffers[channel], luffers[channel] + (1024 - 1), luffers[channel] + 1024);
+            LOG("SDGSD");
+            LOG("%f", rms);
+            LOG("%f", mDbs);
+            float reduction = 0.0;
+            if (rms > mDbs) {
+                reduction = rms - mDbs;
+            }
+            
+            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
+            LOG("%f", gainReduction[channel][0]);
+            
+            std::copy_backward(luffers[channel], luffers[channel] + (luffersLength - 1), luffers[channel] + luffersLength);
             std::memcpy(luffers[channel], &rms, sizeof(float));
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
@@ -192,7 +203,10 @@ public:
     //    LufsAdapter lufsAdapter;
     std::vector <Biquad> biquads;
     
+    const int lufsWindow = 17640;
+    const int luffersLength = 1024;
     double mSampleRate = 44100.0;
+    
     double mDbs = 1.0;
     int stages = 2;
     double Coeffs[10] = {
@@ -209,7 +223,7 @@ public:
         0.990072250
     };
     bool mBypassed = false;
-    AUAudioFrameCount mMaxFramesToRender = 1024;
+    AUAudioFrameCount mMaxFramesToRender = 256;
     
 //    float temp[2][1024];
 //    std::vector<float> temp;

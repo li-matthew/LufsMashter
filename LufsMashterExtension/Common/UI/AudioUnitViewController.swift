@@ -23,6 +23,7 @@ private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "Audi
 @MainActor
 public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     var luffers: ObservableLufsBuffer = ObservableLufsBuffer()
+    var luffersTest: ObservableLufsBuffer = ObservableLufsBuffer()
     var audioUnit: AUAudioUnit?
     var timer: Timer?
     
@@ -64,6 +65,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.updateLufsBuffer()
+                self?.updateGainReduction()
             }
         }
     }
@@ -75,6 +77,14 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         bufferSubject.send(buffer)
         luffers.buffer = buffer
 //        NSLog("\(luffers.buffer[0][700])")
+    }
+    
+    public func updateGainReduction() {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        let buffer = audioUnit.getGainReduction()
+        
+        bufferSubject.send(buffer)
+        luffersTest.buffer = buffer
     }
 
     deinit {
@@ -142,7 +152,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, luffers: luffers)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, luffers: luffers, luffersTest: luffersTest)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds

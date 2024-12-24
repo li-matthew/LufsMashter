@@ -35,20 +35,13 @@ public:
     mBufferedInputBus(bufferedInputBus)
     {
     }
-    
-//    float * getLufs() {
-////        return 0.0;
-//        float temp[2] = { 0.0, 0.0};
-//        return temp;
-////        return mLuffers[0].data();
-//    }
-//    void getLufs(float* outputData, int maxFrames) {
-//        int framesToCopy = std::min(maxFrames, (int)mLuffers[0].size());
-//        std::copy(mLuffers[0].begin(), mLuffers[0].begin() + framesToCopy, outputData);
-//    }
-    
+
     const std::vector<float*>& getLufsBuffer() const {
         return mLuffers;
+    }
+    
+    const std::vector<float*>& getGainReduction() const {
+        return mGainReduction;
     }
 //
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
@@ -57,10 +50,12 @@ public:
         mOutputBuffers.resize(outputChannelCount);
         mLufsFrame.resize(inputChannelCount);
         mLuffers.resize(inputChannelCount);
+        mGainReduction.resize(inputChannelCount);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mLuffers[channel] = new float[1024];
             mLufsFrame[channel] = new float[17640];
+            mGainReduction[channel] = new float[1024];
         }
     }
 
@@ -83,7 +78,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(mLufsFrame, mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(mGainReduction, mLufsFrame, mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -189,5 +184,6 @@ private:
 //    std::vector<std::vector<float*>*> mLuffers;
     std::vector<float*> mLufsFrame; // samples for calculating lufs
     std::vector<float*> mLuffers; // buffer of lufs
+    std::vector<float*> mGainReduction;
     BufferedInputBus& mBufferedInputBus;
 };
