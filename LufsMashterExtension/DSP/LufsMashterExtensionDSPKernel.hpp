@@ -138,7 +138,7 @@ public:
          }
          */
         
-        float targetLufs = lufsWindow * mDbs * mDbs;
+        float targetEnergy = lufsWindow * mDbs * mDbs;
         
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
@@ -168,32 +168,29 @@ public:
             
 //
             // TODO
-            float reduction = 0.0;
+            float reduction = 1.0;
             LOG("PPP");
 //            LOG("%f", energy);
-////            LOG("%f", currEnergy);
 //            LOG("%f", rms);
 //            LOG("%f", rmsTest);
-            LOG("%f", targetLufs);
-            LOG("%f", energy + currEnergy);
+            LOG("%f", targetEnergy);
+//            LOG("%f", energy + currEnergy);
             
-            if ((energy + currEnergy) > targetLufs) {
+            if ((energy + currEnergy) > targetEnergy) {
 //                LOG("%f", (targetLufs - energy) / currEnergy);
-                LOG("%f", currEnergy / (energy - targetLufs));
-                reduction = sqrt(currEnergy / (energy - targetLufs));
+//                LOG("%f", currEnergy / (energy - targetLufs));
+                reduction = sqrt(currEnergy / (energy - targetEnergy));
+                LOG("%f", rms);
                 LOG("%f", reduction);
             }
-            
-//          N
-            
             std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
-//
+
             std::copy_backward(luffers[channel], luffers[channel] + (luffersLength - 1), luffers[channel] + luffersLength);
             std::memcpy(luffers[channel], &rms, sizeof(float));
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * reduction;
             }
         }
     }
