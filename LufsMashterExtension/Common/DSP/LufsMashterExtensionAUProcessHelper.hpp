@@ -55,10 +55,12 @@ public:
     {
         mInputBuffers.resize(inputChannelCount);
         mOutputBuffers.resize(outputChannelCount);
+        mLufsFrame.resize(inputChannelCount);
         mLuffers.resize(inputChannelCount);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mLuffers[channel] = new float[1024];
+            mLufsFrame[channel] = new float[17640];
         }
     }
 
@@ -81,7 +83,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(mLufsFrame, mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -185,6 +187,7 @@ private:
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
 //    std::vector<std::vector<float*>*> mLuffers;
-    std::vector<float*> mLuffers;
+    std::vector<float*> mLufsFrame; // samples for calculating lufs
+    std::vector<float*> mLuffers; // buffer of lufs
     BufferedInputBus& mBufferedInputBus;
 };

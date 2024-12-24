@@ -16,7 +16,7 @@ struct LufsMashterExtensionMainView: View {
     
     var body: some View {
         VStack {
-//            ParameterSlider(param: parameterTree.global.dbs)
+            ParameterSlider(param: parameterTree.global.dbs)
             
             MetalLufsView(metalLufs: metalLufs)
         }

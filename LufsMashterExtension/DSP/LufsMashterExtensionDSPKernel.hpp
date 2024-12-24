@@ -7,6 +7,16 @@
 
 #pragma once
 
+#ifdef __OBJC__
+    // If compiling with Objective-C++, we can use os_log
+    #import <os/log.h>
+    #define LOG(fmt, ...) os_log(OS_LOG_DEFAULT, "[DSP LOG] " fmt, ##__VA_ARGS__)
+#else
+    // If compiling in pure C++, use std::cout as fallback
+    #include <iostream>
+    #define LOG(fmt, ...) std::cout << "[DSP LOG] " << fmt << std::endl
+#endif
+
 #import <AudioToolbox/AudioToolbox.h>
 #import <algorithm>
 #import <vector>
@@ -100,7 +110,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(std::span<float*> luffers, std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(std::span<float*>lufsFrame, std::span<float*> luffers, std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -127,33 +137,35 @@ public:
          nullptr);	// currentMeasureDownbeatPosition
          }
          */
+        
+        float target = 20.0 * log10(mDbs);
+        
+        LOG("%f", target);
         // Perform per sample dsp on the incoming float in before assigning it to out
-        //        for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             // Do your sample by sample dsp here...
-//            vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, coeffs, 0, 1);
+            vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, Coeffs, 0, 1);
+            vDSP_biquad(biquads[channel].setup,
+                                    biquads[channel].delay,
+                                    inputBuffers[channel], 1,
+                                    outputBuffers[channel], 1,
+                                    frameCount);
             
-//            vDSP_biquad(biquads[channel].setup,
-//                        biquads[channel].delay,
-//                        inputBuffers[channel], 1,
-//                        outputBuffers[channel], 1,
-//                        frameCount);
+            std::copy_backward(lufsFrame[channel], lufsFrame[channel] + (17640 - frameCount), lufsFrame[channel] + 17640);
+            std::memcpy(lufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
             
+            float rms;
+            vDSP_rmsqv(lufsFrame[channel], 1, &rms, luffers.size());
             
+            if (rms > )
+            
+            std::copy_backward(luffers[channel], luffers[channel] + (1024 - 1), luffers[channel] + 1024);
+            std::memcpy(luffers[channel], &rms, sizeof(float));
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-//                float temp;
-                
-                luffers[channel][frameIndex] = outputBuffers[channel][frameIndex];
-//                luffers[channel].insert(outputBuffers[channel][frameIndex]);
-//                luffers[channel].pop_back();
-//                vDSP_rmsqv(outputBuffers[channel], 1, luffers[channel], luffers.size());
-                
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
             }
-            //                adapter.filterPhase(inputBuffers[channel][frameIndex], &outputBuffers[channel][frameIndex], channel);
         }
-        //        }
     }
     
     void handleOneEvent(AUEventSampleTime now, AURenderEvent const *event) {
