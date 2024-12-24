@@ -138,9 +138,8 @@ public:
          }
          */
         
-        float target = 20.0 * log10(mDbs);
+        float targetLufs = lufsWindow * mDbs * mDbs;
         
-        LOG("%f", target);
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             // Do your sample by sample dsp here...
@@ -151,30 +150,50 @@ public:
                                     outputBuffers[channel], 1,
                                     frameCount);
             
+//
             std::copy_backward(lufsFrame[channel], lufsFrame[channel] + (lufsWindow - frameCount), lufsFrame[channel] + lufsWindow);
             std::memcpy(lufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+//            
+            float energy;
+            vDSP_svesq(lufsFrame[channel] + frameCount, 1, &energy, lufsWindow - frameCount);
             
-            float rms;
-            vDSP_rmsqv(lufsFrame[channel], 1, &rms, luffers.size());
+            float currEnergy;
+            vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
+//            
+//            float rms;
+//            vDSP_rmsqv(lufsFrame[channel], 1, &rms, lufsWindow);
             
-            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
+            float rms = sqrt((energy + currEnergy) / lufsWindow);
+//
             
-            LOG("SDGSD");
-            LOG("%f", rms);
-            LOG("%f", mDbs);
+//
+            // TODO
             float reduction = 0.0;
-            if (rms > mDbs) {
-                reduction = rms - mDbs;
+            LOG("PPP");
+//            LOG("%f", energy);
+////            LOG("%f", currEnergy);
+//            LOG("%f", rms);
+//            LOG("%f", rmsTest);
+            LOG("%f", targetLufs);
+            LOG("%f", energy + currEnergy);
+            
+            if ((energy + currEnergy) > targetLufs) {
+//                LOG("%f", (targetLufs - energy) / currEnergy);
+                LOG("%f", currEnergy / (energy - targetLufs));
+                reduction = sqrt(currEnergy / (energy - targetLufs));
+                LOG("%f", reduction);
             }
             
-            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
-            LOG("%f", gainReduction[channel][0]);
+//          N
             
+            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
+            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
+//
             std::copy_backward(luffers[channel], luffers[channel] + (luffersLength - 1), luffers[channel] + luffersLength);
             std::memcpy(luffers[channel], &rms, sizeof(float));
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * mDbs;
             }
         }
     }
@@ -207,7 +226,7 @@ public:
     const int luffersLength = 1024;
     double mSampleRate = 44100.0;
     
-    double mDbs = 1.0;
+    double mDbs = 0.0;
     int stages = 2;
     double Coeffs[10] = {
         1.53512948,         // b
@@ -223,7 +242,7 @@ public:
         0.990072250
     };
     bool mBypassed = false;
-    AUAudioFrameCount mMaxFramesToRender = 256;
+    AUAudioFrameCount mMaxFramesToRender = 1024;
     
 //    float temp[2][1024];
 //    std::vector<float> temp;
