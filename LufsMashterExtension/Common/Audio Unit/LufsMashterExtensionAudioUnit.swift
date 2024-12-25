@@ -41,8 +41,8 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         adapter = LufsAdapter(processHelper: &processHelper!)
 	}
 
-    public func getLufsBuffer() -> [[Float]] {
-        guard let buffer = adapter!.getLufsBuffer() else {
+    public func getInLuffers() -> [[Float]] {
+        guard let buffer = adapter!.getInLuffers() else {
             return []
         }
         let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
@@ -55,6 +55,15 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return []
         }
         let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
+        return result
+    }
+    
+    public func getOutLuffers() -> [[Float]] {
+        guard let buffer = adapter!.getOutLuffers() else {
+            return []
+        }
+        let result: [[Float]] = buffer.map { row in row.map { $0.floatValue } }
+//        NSLog("\(result)")
         return result
     }
 

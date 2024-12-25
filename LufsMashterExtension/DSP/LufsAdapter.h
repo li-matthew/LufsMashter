@@ -10,7 +10,8 @@
 @interface LufsAdapter : NSObject
 @property (nonatomic, readonly) AUProcessHelper * processHelper;
 - (instancetype)initWithProcessHelper:(AUProcessHelper*)existingProcessHelper;
-- (NSArray<NSArray<NSNumber*>*>*)getLufsBuffer;
+- (NSArray<NSArray<NSNumber*>*>*)getInLuffers;
 - (NSArray<NSArray<NSNumber*>*>*)getGainReduction;
+- (NSArray<NSArray<NSNumber*>*>*)getOutLuffers;
 
 @end

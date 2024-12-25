@@ -22,8 +22,10 @@ private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "Audi
 
 @MainActor
 public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
-    var luffers: ObservableLufsBuffer = ObservableLufsBuffer()
-    var luffersTest: ObservableLufsBuffer = ObservableLufsBuffer()
+    var inLuffers: ObservableLufsBuffer = ObservableLufsBuffer()
+    var gainReduction: ObservableLufsBuffer = ObservableLufsBuffer()
+    var outLuffers: ObservableLufsBuffer = ObservableLufsBuffer()
+    
     var audioUnit: AUAudioUnit?
     var timer: Timer?
     
@@ -64,18 +66,19 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.updateLufsBuffer()
+                self?.updateInLuffers()
                 self?.updateGainReduction()
+                self?.updateOutLuffers()
             }
         }
     }
     
-    public func updateLufsBuffer() {
+    public func updateInLuffers() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffer = audioUnit.getLufsBuffer()
+        let buffer = audioUnit.getInLuffers()
         
         bufferSubject.send(buffer)
-        luffers.buffer = buffer
+        inLuffers.buffer = buffer
 //        NSLog("\(luffers.buffer[0][700])")
     }
     
@@ -84,7 +87,15 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         let buffer = audioUnit.getGainReduction()
         
         bufferSubject.send(buffer)
-        luffersTest.buffer = buffer
+        gainReduction.buffer = buffer
+    }
+    
+    public func updateOutLuffers() {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        let buffer = audioUnit.getOutLuffers()
+        
+        bufferSubject.send(buffer)
+        outLuffers.buffer = buffer
     }
 
     deinit {
@@ -152,7 +163,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, luffers: luffers, luffersTest: luffersTest)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, inLuffers: inLuffers, gainReduction: gainReduction, outLuffers: outLuffers)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds

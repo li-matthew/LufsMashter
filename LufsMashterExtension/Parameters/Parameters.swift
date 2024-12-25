@@ -16,7 +16,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             name: "Target dBs",
             units: .generic,
             valueRange: 0.0...0.5,
-            defaultValue: 0.0
+            defaultValue: 0.1
         )
     }
 }

@@ -36,25 +36,31 @@ public:
     {
     }
 
-    const std::vector<float*>& getLufsBuffer() const {
-        return mLuffers;
+    const std::vector<float*>& getInLuffers() const {
+        return mInLuffers;
     }
     
     const std::vector<float*>& getGainReduction() const {
         return mGainReduction;
     }
-//
+    
+    const std::vector<float*>& getOutLuffers() const {
+        return mOutLuffers;
+    }
+
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
     {
         mInputBuffers.resize(inputChannelCount);
         mOutputBuffers.resize(outputChannelCount);
         mLufsFrame.resize(inputChannelCount);
-        mLuffers.resize(inputChannelCount);
+        mInLuffers.resize(inputChannelCount);
+        mOutLuffers.resize(inputChannelCount);
         mGainReduction.resize(inputChannelCount);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
-            mLuffers[channel] = new float[1024];
             mLufsFrame[channel] = new float[17640];
+            mInLuffers[channel] = new float[1024];
+            mOutLuffers[channel] = new float[1024];
             mGainReduction[channel] = new float[1024];
         }
     }
@@ -78,7 +84,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(mGainReduction, mLufsFrame, mLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(mGainReduction, mLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -183,7 +189,8 @@ private:
     std::vector<float*> mOutputBuffers;
 //    std::vector<std::vector<float*>*> mLuffers;
     std::vector<float*> mLufsFrame; // samples for calculating lufs
-    std::vector<float*> mLuffers; // buffer of lufs
+    std::vector<float*> mInLuffers; // buffer of lufs
+    std::vector<float*> mOutLuffers;
     std::vector<float*> mGainReduction;
     BufferedInputBus& mBufferedInputBus;
 };

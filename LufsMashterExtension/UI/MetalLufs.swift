@@ -9,7 +9,6 @@ import MetalKit
 import Combine
 
 public class MetalLufs: MTKView, MTKViewDelegate {
-    let testVertices: [Float] = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
     let commandQueue: MTLCommandQueue!
     let pipelineState: MTLRenderPipelineState!
     
