@@ -187,7 +187,6 @@ private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
-//    std::vector<std::vector<float*>*> mLuffers;
     std::vector<float*> mLufsFrame; // samples for calculating lufs
     std::vector<float*> mInLuffers; // buffer of lufs
     std::vector<float*> mOutLuffers;

@@ -10,6 +10,7 @@ import Combine
 
 struct LufsMashterExtensionMainView: View {
     var parameterTree: ObservableAUParameterGroup
+    
     @ObservedObject var inLuffers: ObservableLufsBuffer
     @ObservedObject var gainReduction: ObservableLufsBuffer
     @ObservedObject var outLuffers: ObservableLufsBuffer

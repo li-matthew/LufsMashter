@@ -18,7 +18,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     let constants = MTLFunctionConstantValues()
     var length: UInt32 = 1024
     
-    
     private var cancellables: Set<AnyCancellable> = []
     
     var metalView: ObservableLufsBuffer? {

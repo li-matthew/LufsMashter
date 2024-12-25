@@ -43,10 +43,8 @@ public:
     
     void initialize(int inputChannelCount, int outputChannelCount, double inSampleRate) {
         mSampleRate = inSampleRate;
-//        mLuffers.resize(inputChannelCount);
         
         for (int i = 0; i < inputChannelCount; i++) {
-//            memset(mLuffers[i], 0.0, 1024 * sizeof(float));
             biquads.push_back((Biquad){
                 .setup = vDSP_biquad_CreateSetup(Coeffs, stages)
             });
@@ -164,20 +162,18 @@ public:
 
             // TODO
             float reduction = 1.0;
+            
             LOG("PPP");
             LOG("%f", energy);
             LOG("%f", targetEnergy);
             LOG("%f", energy + currEnergy);
-//            reduction = energy;
+            
             if ((energy + currEnergy) > targetEnergy) {
-//                LOG("%f", (targetEnergy - energy) / currEnergy);
                 if (energy < targetEnergy) {
                     reduction = sqrt((targetEnergy - energy) / currEnergy);
                 } else {
                     reduction = 0.0;
                 }
-//                LOG("%f", rms);
-//                LOG("%f", reduction);
             }
             
             // Add to Gain Reduction
