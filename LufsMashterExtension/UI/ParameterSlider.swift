@@ -17,6 +17,6 @@ struct ParameterSlider: View {
     var body: some View {
         ArcKnob("dBs", value: $param.value, range: param.min...param.max)
             .accessibility(identifier: param.displayName)
-        Text("\(param.displayName): \(20 * log(param.value)) dB")
+        Text(String(format: "\(param.displayName): %.2f dB", (20 * log(param.value))))
     }
 }

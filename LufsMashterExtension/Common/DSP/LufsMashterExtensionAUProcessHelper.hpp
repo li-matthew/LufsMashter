@@ -52,13 +52,15 @@ public:
     {
         mInputBuffers.resize(inputChannelCount);
         mOutputBuffers.resize(outputChannelCount);
-        mLufsFrame.resize(inputChannelCount);
+        mInLufsFrame.resize(inputChannelCount);
+        mOutLufsFrame.resize(inputChannelCount);
         mInLuffers.resize(inputChannelCount);
         mOutLuffers.resize(inputChannelCount);
         mGainReduction.resize(inputChannelCount);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
-            mLufsFrame[channel] = new float[17640];
+            mInLufsFrame[channel] = new float[17640];
+            mOutLufsFrame[channel] = new float[17640];
             mInLuffers[channel] = new float[1024];
             mOutLuffers[channel] = new float[1024];
             mGainReduction[channel] = new float[1024];
@@ -84,7 +86,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(mGainReduction, mLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -187,7 +189,8 @@ private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
-    std::vector<float*> mLufsFrame; // samples for calculating lufs
+    std::vector<float*> mInLufsFrame;
+    std::vector<float*> mOutLufsFrame;// samples for calculating lufs
     std::vector<float*> mInLuffers; // buffer of lufs
     std::vector<float*> mOutLuffers;
     std::vector<float*> mGainReduction;

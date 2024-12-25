@@ -108,7 +108,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(std::span<float*> gainReduction, std::span<float*>lufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -149,30 +149,31 @@ public:
                                     frameCount);
             
             // Shift lufsFrame
-            std::copy_backward(lufsFrame[channel], lufsFrame[channel] + (lufsWindow - frameCount), lufsFrame[channel] + lufsWindow);
-   
+            std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
+            
+            std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
+            std::memcpy(inLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+            
+            float rms;
+        
             // Section Energies
             float energy;
-            vDSP_svesq(lufsFrame[channel] + frameCount, 1, &energy, lufsWindow - frameCount);
+            vDSP_svesq(outLufsFrame[channel] + frameCount, 1, &energy, lufsWindow - frameCount);
             
             float currEnergy;
             vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
             
-            float rms = sqrt((energy + currEnergy) / lufsWindow);
+            std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
+            rms = sqrt((energy + currEnergy) / lufsWindow);
 
             // TODO
             float reduction = 1.0;
-            
-            LOG("PPP");
-            LOG("%f", energy);
-            LOG("%f", targetEnergy);
-            LOG("%f", energy + currEnergy);
             
             if ((energy + currEnergy) > targetEnergy) {
                 if (energy < targetEnergy) {
                     reduction = sqrt((targetEnergy - energy) / currEnergy);
                 } else {
-                    reduction = 0.0;
+                    reduction = 0.5;
                 }
             }
             
@@ -180,19 +181,19 @@ public:
             std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
-            // Add to In Luffers
+            // Add to Out Luffers
             std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
-            std::memcpy(inLuffers[channel], &rms, sizeof(float));
-
+            
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * reduction;
             }
             
-            std::memcpy(lufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
-            vDSP_rmsqv(lufsFrame[channel], 1, &rms, lufsWindow);
-            
-            std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
+            std::memcpy(outLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+            vDSP_rmsqv(outLufsFrame[channel], 1, &rms, lufsWindow);
             std::memcpy(outLuffers[channel], &rms, sizeof(float));
+            
+            vDSP_rmsqv(inLufsFrame[channel], 1, &rms, lufsWindow);
+            std::memcpy(inLuffers[channel], &rms, sizeof(float));
         }
     }
     
