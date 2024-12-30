@@ -10,5 +10,6 @@
 #include <AudioToolbox/AUParameters.h>
 
 typedef NS_ENUM(AUParameterAddress, LufsMashterExtensionParameterAddress) {
-    dbs = 0
+    dbs = 0,
+    sens = 1
 };

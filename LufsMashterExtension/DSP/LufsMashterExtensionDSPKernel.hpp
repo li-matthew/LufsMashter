@@ -73,6 +73,9 @@ public:
             case LufsMashterExtensionParameterAddress::dbs:
                 mDbs = value;
                 break;
+            case LufsMashterExtensionParameterAddress::sens:
+                mSens = value;
+                break;
                 // Add a case for each parameter in LufsMashterExtensionParameterAddresses.h
         }
     }
@@ -83,6 +86,8 @@ public:
         switch (address) {
             case LufsMashterExtensionParameterAddress::dbs:
                 return (AUValue)mDbs;
+            case LufsMashterExtensionParameterAddress::sens:
+                return (AUValue)mSens;
                 
             default: return 0.f;
         }
@@ -108,7 +113,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -138,8 +143,15 @@ public:
         
         float targetEnergy = lufsWindow * mDbs * mDbs;
         
+        
+        float sens = mSens/*std::fmax(mSens * (mSampleRate / frameCount), 1.0)*/; // milliseconds
+        
+        float knee = 4.0;
+        
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
+            float currReduction = *gainReduction[channel];
+            
             // Do your sample by sample dsp here...
             vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, Coeffs, 0, 1);
             vDSP_biquad(biquads[channel].setup,
@@ -164,28 +176,114 @@ public:
             vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
             
             std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
-            rms = sqrt((energy + currEnergy) / lufsWindow);
+//            rms = sqrt((energy + currEnergy) / lufsWindow);
+            
+            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
 
             // TODO
             float reduction = 1.0;
+            if (currEnergy <= 0.0f) currEnergy = 1e-6f;
+            LOG("SENS%f", sens);
+            LOG("prev%d", *prevOverThreshold);
+            LOG("CE%f", currEnergy);
+            LOG("E%f", energy);
+            float safeCurrEnergy = std::max(currEnergy, 1e-6f);
+            float safeTargetEnergy = std::max(targetEnergy, 1e-6f);
+            float safeEnergyDiff = std::max(targetEnergy - energy, 0.0f);
             
-            if ((energy + currEnergy) > targetEnergy) {
-                if (energy < targetEnergy) {
-                    reduction = sqrt((targetEnergy - energy) / currEnergy);
+            
+            if (!*prevOverThreshold) {
+                if ((currEnergy + energy) > targetEnergy) {
+                    *prevOverThreshold = true;
+                    if (targetEnergy < energy) {
+                        reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
+                    } else {
+                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
+                    }
+//                    reduction = 1.0 - ((1.0 - reduction));
                 } else {
-                    reduction = 0.5;
+                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
                 }
+                LOG("NEW%f", reduction);
+            } else {
+                if ((energy + currEnergy) > targetEnergy) {
+                    if (targetEnergy < energy) {
+                        reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
+                    } else {
+                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
+                    }
+//                    reduction = 1.0 - ((1.0 - reduction));
+                } else {
+                    *prevOverThreshold = false;
+                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
+                }
+                LOG("CONT%f", reduction);
             }
             
+//            if (!*prevOverThreshold) {
+//                if ((currEnergy + energy) > targetEnergy) {
+//                    *prevOverThreshold = true;
+//                    if (targetEnergy < energy) {
+//                        reduction = sqrt(1e-6f / (currEnergy + (energy - targetEnergy)));
+//                        LOG("no%f", reduction);
+//                    } else {
+//                        
+//                        reduction = sqrt((targetEnergy - energy) / currEnergy);
+//                        LOG("no%f", reduction);
+//                        
+//                    }
+//                    
+//                }
+//                reduction = 1.0 - ((1.0 - reduction) / sens);
+//            } else {
+//                
+//                // continue applying gain reduction
+//                if ((energy + currEnergy) > targetEnergy) {
+//                    // continue ramping down with new reduction
+//                    if (targetEnergy < energy) {
+//                        LOG("A%f", energy - targetEnergy);
+//                        reduction = (*gainReduction[channel] - ((1.0f - *gainReduction[channel])));
+////                        reduction = sqrt(1e-6f / (currEnergy + (energy - targetEnergy)));
+//                        LOG("y1%f", reduction);
+//                    } else {
+//                       
+//                        reduction = sqrt((targetEnergy - energy) / currEnergy);
+//                        LOG("y2%f", reduction);
+//                        reduction = 1.0 - ((1.0 - reduction) / sens);
+//                        
+//                    }
+//                    
+//                    
+//                } else {
+//                    
+//                    
+//                    *prevOverThreshold = false;
+//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel]) / sens);
+//                    LOG("release %f", reduction);
+//                }
+//            }
+            LOG("r%f", reduction);
+            
+//            sens = 1.0 / sens;
+            
+            reduction = (1.0f - sens) * currReduction + sens * reduction;
+            LOG("r%f", sens);
+            *gainReduction[channel] = (float)std::clamp(reduction, 0.0f, 1.0f);
+            
+            LOG("FINAL%f", *gainReduction[channel]);
+            
             // Add to Gain Reduction
-            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
+            
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
             std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
             
+            float step = (*gainReduction[channel] - currReduction) / frameCount;
+            
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * reduction;
+                currReduction += step;
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * currReduction;
             }
             
             std::memcpy(outLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
@@ -215,10 +313,6 @@ public:
     
     // MARK: Member Variables
     AUHostMusicalContextBlock mMusicalContextBlock;
-    
-    //    std::vector<LufsAdapter::FilterState> filterStates;
-    //    LufsAdapter::FilterCoefficients coeffs;
-    //    LufsAdapter lufsAdapter;
     std::vector <Biquad> biquads;
     
     const int lufsWindow = 17640;
@@ -226,6 +320,8 @@ public:
     double mSampleRate = 44100.0;
     
     double mDbs = 0.0;
+    double mSens = 0.5;
+    
     int stages = 2;
     double Coeffs[10] = {
         1.53512948,         // b
@@ -234,7 +330,7 @@ public:
         -1.69500495,        // a
         0.73199158,
         
-        1.0,         // b
+        1.0,                // b
         -2.0,
         1.0,
         -1.99004745,        // a
@@ -242,8 +338,4 @@ public:
     };
     bool mBypassed = false;
     AUAudioFrameCount mMaxFramesToRender = 1024;
-    
-//    float temp[2][1024];
-//    std::vector<float> temp;
-    
 };

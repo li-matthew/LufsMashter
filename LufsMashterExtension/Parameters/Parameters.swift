@@ -18,6 +18,14 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             valueRange: 0.0...0.5,
             defaultValue: 0.1
         )
+        ParameterSpec(
+            address: .sens,
+            identifier: "sens",
+            name: "Sensitivity",
+            units: .generic,
+            valueRange: 0.1...1.0,
+            defaultValue: 0.5
+        )
     }
 }
 

@@ -21,10 +21,14 @@ struct LufsMashterExtensionMainView: View {
     
     var body: some View {
         VStack {
-            ParameterSlider(param: parameterTree.global.dbs)
+            HStack {
+                ParameterSlider(param: parameterTree.global.dbs)
+                ParameterSlider(param: parameterTree.global.sens)
+            }
             Text(String(format: "%.2f dB curr", 20 * log(inLuffers.buffer[0][0])))
             Text(String(format: "%.2f dB out", 20 * log(outLuffers.buffer[0][0])))
             Text(String(format: "%.2f dB red", 20 * log(gainReduction.buffer[0][0])))
+            Text(String(format: "%.2f r", gainReduction.buffer[0][0]))
             HStack {
                 MetalLufsView(metalLufs: metalLufs).frame(width: 250, height: 100)
                 MetalLufsView(metalLufs: metalLufsOut).frame(width: 250, height: 100)
