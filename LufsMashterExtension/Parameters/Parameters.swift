@@ -11,20 +11,36 @@ import AudioToolbox
 let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
     ParameterGroupSpec(identifier: "global", name: "Global") {
         ParameterSpec(
-            address: .dbs,
-            identifier: "dbs",
-            name: "dBs",
+            address: .target,
+            identifier: "target",
+            name: "target",
             units: .generic,
             valueRange: 0.0...0.5,
             defaultValue: 0.1
         )
         ParameterSpec(
-            address: .sens,
-            identifier: "sens",
-            name: "sens",
+            address: .attack,
+            identifier: "attack",
+            name: "attack",
             units: .generic,
             valueRange: 0.01...1.0,
             defaultValue: 0.5
+        )
+        ParameterSpec(
+            address: .release,
+            identifier: "release",
+            name: "release",
+            units: .generic,
+            valueRange: 0.01...1.0,
+            defaultValue: 0.5
+        )
+        ParameterSpec(
+            address: .ratio,
+            identifier: "ratio",
+            name: "ratio",
+            units: .generic,
+            valueRange: 1...10,
+            defaultValue: 2
         )
     }
 }

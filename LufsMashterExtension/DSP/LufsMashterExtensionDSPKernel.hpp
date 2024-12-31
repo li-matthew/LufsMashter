@@ -70,11 +70,14 @@ public:
     // MARK: - Parameter Getter / Setter
     void setParameter(AUParameterAddress address, AUValue value) {
         switch (address) {
-            case LufsMashterExtensionParameterAddress::dbs:
-                mDbs = value;
+            case LufsMashterExtensionParameterAddress::target:
+                mTarget = value;
                 break;
-            case LufsMashterExtensionParameterAddress::sens:
-                mSens = value;
+            case LufsMashterExtensionParameterAddress::attack:
+                mAttack = value;
+                break;
+            case LufsMashterExtensionParameterAddress::release:
+                mRelease = value;
                 break;
                 // Add a case for each parameter in LufsMashterExtensionParameterAddresses.h
         }
@@ -84,10 +87,12 @@ public:
         // Return the goal. It is not thread safe to return the ramping value.
         
         switch (address) {
-            case LufsMashterExtensionParameterAddress::dbs:
-                return (AUValue)mDbs;
-            case LufsMashterExtensionParameterAddress::sens:
-                return (AUValue)mSens;
+            case LufsMashterExtensionParameterAddress::target:
+                return (AUValue)mTarget;
+            case LufsMashterExtensionParameterAddress::attack:
+                return (AUValue)mAttack;
+            case LufsMashterExtensionParameterAddress::release:
+                return (AUValue)mRelease;
                 
             default: return 0.f;
         }
@@ -141,10 +146,11 @@ public:
          }
          */
         
-        float targetEnergy = lufsWindow * mDbs * mDbs;
+        float targetEnergy = lufsWindow * mTarget * mTarget;
         
         
-        float sens = mSens/*std::fmax(mSens * (mSampleRate / frameCount), 1.0)*/; // milliseconds
+        float attack = mAttack;
+        float release = mRelease;
 
         
         // Perform per sample dsp on the incoming float in before assigning it to out
@@ -190,8 +196,12 @@ public:
                     } else {
                         reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
                     }
+                    
+                    reduction = (1.0f - attack) * currReduction + attack * reduction;
                 } else {
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
+                    
+                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
@@ -200,13 +210,17 @@ public:
                     } else {
                         reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
                     }
+                    
+                    reduction = (1.0f - attack) * currReduction + attack * reduction;
                 } else {
                     *prevOverThreshold = false;
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
+                    
+                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             }
  
-            reduction = (1.0f - sens) * currReduction + sens * reduction;
+//            reduction = (1.0f - sens) * currReduction + sens * reduction;
 
             *gainReduction[channel] = (float)std::clamp(reduction, 0.0f, 1.0f);
             
@@ -257,8 +271,9 @@ public:
     const int luffersLength = 1024;
     double mSampleRate = 44100.0;
     
-    double mDbs = 0.0;
-    double mSens = 0.5;
+    double mTarget = 0.0;
+    double mAttack = 0.5;
+    double mRelease = 0.5;
     
     int stages = 2;
     double Coeffs[10] = {
