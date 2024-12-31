@@ -145,8 +145,7 @@ public:
         
         
         float sens = mSens/*std::fmax(mSens * (mSampleRate / frameCount), 1.0)*/; // milliseconds
-        
-        float knee = 4.0;
+
         
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
@@ -176,21 +175,12 @@ public:
             vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
             
             std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
-//            rms = sqrt((energy + currEnergy) / lufsWindow);
             
             std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
 
             // TODO
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
-            LOG("SENS%f", sens);
-            LOG("prev%d", *prevOverThreshold);
-            LOG("CE%f", currEnergy);
-            LOG("E%f", energy);
-            float safeCurrEnergy = std::max(currEnergy, 1e-6f);
-            float safeTargetEnergy = std::max(targetEnergy, 1e-6f);
-            float safeEnergyDiff = std::max(targetEnergy - energy, 0.0f);
-            
             
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
@@ -200,11 +190,9 @@ public:
                     } else {
                         reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
                     }
-//                    reduction = 1.0 - ((1.0 - reduction));
                 } else {
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
                 }
-                LOG("NEW%f", reduction);
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
                     if (targetEnergy < energy) {
@@ -212,65 +200,15 @@ public:
                     } else {
                         reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
                     }
-//                    reduction = 1.0 - ((1.0 - reduction));
                 } else {
                     *prevOverThreshold = false;
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
                 }
-                LOG("CONT%f", reduction);
             }
-            
-//            if (!*prevOverThreshold) {
-//                if ((currEnergy + energy) > targetEnergy) {
-//                    *prevOverThreshold = true;
-//                    if (targetEnergy < energy) {
-//                        reduction = sqrt(1e-6f / (currEnergy + (energy - targetEnergy)));
-//                        LOG("no%f", reduction);
-//                    } else {
-//                        
-//                        reduction = sqrt((targetEnergy - energy) / currEnergy);
-//                        LOG("no%f", reduction);
-//                        
-//                    }
-//                    
-//                }
-//                reduction = 1.0 - ((1.0 - reduction) / sens);
-//            } else {
-//                
-//                // continue applying gain reduction
-//                if ((energy + currEnergy) > targetEnergy) {
-//                    // continue ramping down with new reduction
-//                    if (targetEnergy < energy) {
-//                        LOG("A%f", energy - targetEnergy);
-//                        reduction = (*gainReduction[channel] - ((1.0f - *gainReduction[channel])));
-////                        reduction = sqrt(1e-6f / (currEnergy + (energy - targetEnergy)));
-//                        LOG("y1%f", reduction);
-//                    } else {
-//                       
-//                        reduction = sqrt((targetEnergy - energy) / currEnergy);
-//                        LOG("y2%f", reduction);
-//                        reduction = 1.0 - ((1.0 - reduction) / sens);
-//                        
-//                    }
-//                    
-//                    
-//                } else {
-//                    
-//                    
-//                    *prevOverThreshold = false;
-//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel]) / sens);
-//                    LOG("release %f", reduction);
-//                }
-//            }
-            LOG("r%f", reduction);
-            
-//            sens = 1.0 / sens;
-            
+ 
             reduction = (1.0f - sens) * currReduction + sens * reduction;
-            LOG("r%f", sens);
+
             *gainReduction[channel] = (float)std::clamp(reduction, 0.0f, 1.0f);
-            
-            LOG("FINAL%f", *gainReduction[channel]);
             
             // Add to Gain Reduction
             

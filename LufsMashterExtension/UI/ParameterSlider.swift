@@ -14,10 +14,11 @@ import Controls
 struct ParameterSlider: View {
     @State var param: ObservableAUParameter
     
+    
     var body: some View {
-        ArcKnob("dBs", value: $param.value, range: param.min...param.max)
+        ArcKnob(String(param.displayName), value: $param.value, range: param.min...param.max)
             .accessibility(identifier: param.displayName)
-        Text(String(format: "\(param.displayName): %.2f dB", (20 * log(param.value))))
+        Text(String(format: "%.2f", (20 * log(param.value)), param.value))
         Text("\(param.value)")
     }
 }

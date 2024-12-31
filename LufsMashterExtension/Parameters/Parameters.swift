@@ -13,7 +13,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
         ParameterSpec(
             address: .dbs,
             identifier: "dbs",
-            name: "Target dBs",
+            name: "dBs",
             units: .generic,
             valueRange: 0.0...0.5,
             defaultValue: 0.1
@@ -21,9 +21,9 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
         ParameterSpec(
             address: .sens,
             identifier: "sens",
-            name: "Sensitivity",
+            name: "sens",
             units: .generic,
-            valueRange: 0.1...1.0,
+            valueRange: 0.01...1.0,
             defaultValue: 0.5
         )
     }
