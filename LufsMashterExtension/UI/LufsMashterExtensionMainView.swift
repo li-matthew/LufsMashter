@@ -11,13 +11,9 @@ import Combine
 struct LufsMashterExtensionMainView: View {
     var parameterTree: ObservableAUParameterGroup
     
-    @ObservedObject var inLuffers: ObservableLufsBuffer
-    @ObservedObject var gainReduction: ObservableLufsBuffer
-    @ObservedObject var outLuffers: ObservableLufsBuffer
+    @ObservedObject var vizBuffers: ObservableBuffers
     
     @State private var metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-    @State private var metalLufsOut = MetalLufs(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
-    @State private var metalGain = MetalLufs(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
     
     var body: some View {
         VStack {
@@ -28,21 +24,17 @@ struct LufsMashterExtensionMainView: View {
                 ParameterSlider(param: parameterTree.global.ratio, title: "Ratio")
             }
             HStack {
-                Text(String(format: "%.2f dB Unprocessed LUFS", 20 * log(inLuffers.buffer[0][0])))
-                Text(String(format: "%.2f dB OUT LUFS", 20 * log(outLuffers.buffer[0][0])))
-                Text(String(format: "%.2f dB Reduction", 20 * log(gainReduction.buffer[0][0])))
-                Text(String(format: "%.2f raw reduction", gainReduction.buffer[0][0]))
-            }
+                Text(String(format: "%.2f dB Unprocessed LUFS", vizBuffers.buffers[0][0][0]))
+                Text(String(format: "%.2f dB OUT LUFS", vizBuffers.buffers[1][0][0]))
+                Text(String(format: "%.2f dB Reduction", 20 * log(vizBuffers.buffers[2][0][0])))
+                Text(String(format: "%.2f raw reduction", vizBuffers.buffers[2][0][0]))
+            }.padding()
             HStack {
-                MetalLufsView(metalLufs: metalLufs).frame(width: 250, height: 100)
-                MetalLufsView(metalLufs: metalLufsOut).frame(width: 250, height: 100)
-                MetalLufsView(metalLufs: metalGain).frame(width: 100, height: 100)
-            }
+                MetalLufsView(metalLufs: metalLufs).frame(width: 500, height: 200)
+            }.padding()
         }
         .onAppear {
-            metalLufs.metalView = inLuffers
-            metalLufsOut.metalView = outLuffers
-            metalGain.metalView = gainReduction
+            metalLufs.metalView = vizBuffers
         }
     }
 }

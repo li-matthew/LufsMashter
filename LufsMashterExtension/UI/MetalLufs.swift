@@ -8,25 +8,36 @@
 import MetalKit
 import Combine
 
+var lineColors: [SIMD4<Float>] = [
+    SIMD4(1.0, 0.0, 0.0, 1.0), // Red
+    SIMD4(0.0, 1.0, 0.0, 1.0), // Green
+    SIMD4(0.0, 0.0, 1.0, 1.0)  // Blue
+]
+
 public class MetalLufs: MTKView, MTKViewDelegate {
     let commandQueue: MTLCommandQueue!
     let pipelineState: MTLRenderPipelineState!
     
-    var LufsValues: [[Float]] = [[]]
-    var vertexBuffer: MTLBuffer!
+//    var vizValues: [[[Float]]] = [[[]]]
+    var vizValues: [[[Float]]] = Array(repeating: [[]], count: 3)
+    
+//    var vertexBuffers: [MTLBuffer] = []
+    var inVertexBuffer: MTLBuffer!
+    var outVertexBuffer: MTLBuffer!
+    var redVertexBuffer: MTLBuffer!
     
     let constants = MTLFunctionConstantValues()
     var length: UInt32 = 1024
     
     private var cancellables: Set<AnyCancellable> = []
     
-    var metalView: ObservableLufsBuffer? {
+    var metalView: ObservableBuffers? {
         didSet {
             // Subscribe to updates from the ViewModel
-            metalView?.$buffer
+            metalView?.$buffers
                 .sink { [weak self] newData in
-                    self?.LufsValues = newData
-                    self?.updateVertexBuffer()
+                    self?.vizValues = newData
+                    self?.updateVertexBuffers()
                     self?.setNeedsDisplay(self?.bounds ?? CGRect.zero)
                 }
                 .store(in: &cancellables)
@@ -61,7 +72,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         
         super.init(frame: frameRect, device: device)
         
-        updateVertexBuffer()
+        updateVertexBuffers()
         
         clearColor = .init(red: 0.0, green: 0.0, blue: 0.0, alpha: 0)
 
@@ -73,10 +84,14 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func updateVertexBuffer() {
-        let vertexData: [[Float]] = LufsValues
+    func updateVertexBuffers() {
+        let inVertexData: [[Float]] = vizValues[0]
+        let outVertexData: [[Float]] = vizValues[1]
+        let redVertexData: [[Float]] = vizValues[2]
         
-        vertexBuffer = device!.makeBuffer(bytes: vertexData[0], length: vertexData[0].count * MemoryLayout<Float>.size, options: [])
+        inVertexBuffer = device!.makeBuffer(bytes: inVertexData[0], length: inVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        outVertexBuffer = device!.makeBuffer(bytes: outVertexData[0], length: outVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
     }
     
     public func mtkView(_: MTKView, drawableSizeWillChange _: CGSize) {
@@ -88,7 +103,8 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                   let renderPassDescriptor = view.currentRenderPassDescriptor,
                   let pipelineState = pipelineState,
                   let commandQueue = commandQueue,
-                  let vertexBuffer = vertexBuffer else {
+                  let inVertexBuffer = inVertexBuffer
+        else {
                 return
             }
 
@@ -96,9 +112,33 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             let renderEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
 
             renderEncoder?.setRenderPipelineState(pipelineState)
-            renderEncoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-
+        
+            renderEncoder?.setVertexBuffer(inVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[0],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+        
+            renderEncoder?.setVertexBuffer(outVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[1],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+            
+            renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[2],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+        
+//            for (index, buffer) in vertexBuffers.enumerated() {
+//                renderEncoder?.setVertexBuffer(buffer, offset: 0, index: 0)
+//                renderEncoder?.setFragmentBytes(&lineColors[index],
+//                                                length: MemoryLayout<SIMD4<Float>>.stride,
+//                                                index: 1)
+//                renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: Int(length))
+//            }
+
             renderEncoder?.endEncoding()
             commandBuffer?.present(drawable)
             commandBuffer?.commit()

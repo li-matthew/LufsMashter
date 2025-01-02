@@ -10,11 +10,11 @@ import CoreAudioKit
 import os
 import SwiftUI
 
-class ObservableLufsBuffer: ObservableObject {
-    @Published var buffer: [[Float]]
+class ObservableBuffers: ObservableObject {
+    @Published var buffers: [[[Float]]]
     
     init() {
-        buffer = Array(repeating: Array(repeating: 0.0, count: 1024), count: 2)
+        buffers = Array(repeating: Array(repeating: Array(repeating: 0.0, count: 1024), count: 2), count: 3)
     }
 }
 
@@ -22,16 +22,14 @@ private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "Audi
 
 @MainActor
 public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
-    var inLuffers: ObservableLufsBuffer = ObservableLufsBuffer()
-    var gainReduction: ObservableLufsBuffer = ObservableLufsBuffer()
-    var outLuffers: ObservableLufsBuffer = ObservableLufsBuffer()
+    var vizBuffers: ObservableBuffers = ObservableBuffers()
     
     var audioUnit: AUAudioUnit?
     var timer: Timer?
     
     var hostingController: HostingController<LufsMashterExtensionMainView>?
     
-    private var bufferSubject = CurrentValueSubject<[[Float]], Never>([[]])
+    private var bufferSubject = CurrentValueSubject<[[[Float]]], Never>([[]])
     private var observation: NSKeyValueObservation?
     
     /* iOS View lifcycle
@@ -66,34 +64,16 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                self?.updateInLuffers()
-                self?.updateGainReduction()
-                self?.updateOutLuffers()
+                self?.updateVizBuffers()
             }
         }
     }
     
-    public func updateInLuffers() {
+    public func updateVizBuffers() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffer = audioUnit.getInLuffers()
-        
-        bufferSubject.send(buffer)
-        inLuffers.buffer = buffer    }
-    
-    public func updateGainReduction() {
-        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffer = audioUnit.getGainReduction()
-        
-        bufferSubject.send(buffer)
-        gainReduction.buffer = buffer
-    }
-    
-    public func updateOutLuffers() {
-        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffer = audioUnit.getOutLuffers()
-        
-        bufferSubject.send(buffer)
-        outLuffers.buffer = buffer
+        let buffers = [audioUnit.getInLuffers(), audioUnit.getOutLuffers(), audioUnit.getGainReduction()]
+        bufferSubject.send(buffers)
+        vizBuffers.buffers = buffers
     }
 
     deinit {
@@ -161,7 +141,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, inLuffers: inLuffers, gainReduction: gainReduction, outLuffers: outLuffers)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds

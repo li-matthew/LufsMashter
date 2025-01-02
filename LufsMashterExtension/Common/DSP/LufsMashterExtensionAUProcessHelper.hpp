@@ -68,7 +68,7 @@ public:
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 17640, 0.0f);
             std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 0.0f);
             std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 0.0f);
-            std::fill(mGainReduction[channel], mGainReduction[channel] + 1024, 0.0f);
+            std::fill(mGainReduction[channel], mGainReduction[channel] + 1024, 1.0f);
         }
     }
 

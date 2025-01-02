@@ -10,6 +10,11 @@ using namespace metal;
 
 constant uint bufferLength [[function_constant(0)]];
 
+struct VertexOut {
+    float4 position [[position]];
+    float4 color;
+};
+
 vertex float4 vertexData(const device float *vertices [[ buffer(0) ]],
                           uint vertexID [[ vertex_id ]]) {
     
@@ -19,6 +24,6 @@ vertex float4 vertexData(const device float *vertices [[ buffer(0) ]],
     return float4(x, y, 0.0, 1.0);
 }
 
-fragment float4 fragmentData() {
-    return float4(1.0, 1.0, 1.0, 1.0); // White color
+fragment float4 fragmentData(constant float4 &color [[buffer(1)]]) {
+    return color;
 }

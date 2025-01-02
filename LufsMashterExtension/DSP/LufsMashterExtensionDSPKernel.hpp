@@ -21,6 +21,7 @@
 #import <algorithm>
 #import <vector>
 #import <span>
+//#import <chrono>
 
 #import <Accelerate/Accelerate.h>
 
@@ -119,10 +120,16 @@ public:
      Do your custom DSP here.
      */
     void process(bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+        
+//        startTime = std::chrono::high_resolution_clock::now();
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
          */
+        
+        std::vector<float*> tempBuffers;
+        tempBuffers.resize(2);
+        
         assert(inputBuffers.size() == outputBuffers.size());
         
         if (mBypassed) {
@@ -156,6 +163,12 @@ public:
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             float currReduction = *gainReduction[channel];
+            float inRms;
+            float outRms;
+            
+            if (!tempBuffers[channel]) {
+                tempBuffers[channel] = new float[frameCount];
+            }
             
             // Do your sample by sample dsp here...
             vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, Coeffs, 0, 1);
@@ -165,13 +178,15 @@ public:
                                     outputBuffers[channel], 1,
                                     frameCount);
             
+            
+            
             // Shift lufsFrame
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
-            
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
-            std::memcpy(inLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
+            std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
+            std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
             
-            float rms;
         
             // Section Energies
             float energy;
@@ -179,10 +194,6 @@ public:
             
             float currEnergy;
             vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
-            
-            std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
-            
-            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
 
             // TODO
             float reduction = 1.0;
@@ -219,17 +230,19 @@ public:
                     reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             }
- 
-//            reduction = (1.0f - sens) * currReduction + sens * reduction;
 
             *gainReduction[channel] = (float)std::clamp(reduction, 0.0f, 1.0f);
             
             // Add to Gain Reduction
-            
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
-            std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
+            LOG("PPP");
+            LOG("%f", outputBuffers[channel][0]);
+            
+            std::memcpy(inLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+            vDSP_rmsqv(inLufsFrame[channel], 1, &inRms, lufsWindow);
+            std::memcpy(inLuffers[channel], &inRms, sizeof(float));
             
             float step = (*gainReduction[channel] - currReduction) / frameCount;
             
@@ -237,13 +250,24 @@ public:
                 currReduction += step;
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * currReduction;
             }
+            LOG("%f", currReduction);
+//            LOG("%f", tempBuffers[channel][0]);
+            vDSP_biquad(biquads[channel].setup,
+                                    biquads[channel].delay,
+                                    outputBuffers[channel], 1,
+                                    tempBuffers[channel], 1,
+                                    frameCount);
+            std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
+            vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
+            std::memcpy(outLuffers[channel], &outRms, sizeof(float));
             
-            std::memcpy(outLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
-            vDSP_rmsqv(outLufsFrame[channel], 1, &rms, lufsWindow);
-            std::memcpy(outLuffers[channel], &rms, sizeof(float));
-            
-            vDSP_rmsqv(inLufsFrame[channel], 1, &rms, lufsWindow);
-            std::memcpy(inLuffers[channel], &rms, sizeof(float));
+//            endTime = std::chrono::high_resolution_clock::now();
+
+            // Compute elapsed time
+//            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+//            double latencyInMicroseconds = duration.count();
+            LOG("PPP");
+//            LOG("%f", latencyInMicroseconds);
         }
     }
     
@@ -291,4 +315,6 @@ public:
     };
     bool mBypassed = false;
     AUAudioFrameCount mMaxFramesToRender = 1024;
+//    std::chrono::high_resolution_clock::time_point startTime;
+//    std::chrono::high_resolution_clock::time_point endTime;
 };
