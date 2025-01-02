@@ -11,20 +11,42 @@ import Combine
 var lineColors: [SIMD4<Float>] = [
     SIMD4(1.0, 0.0, 0.0, 1.0), // Red
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
-    SIMD4(0.0, 0.0, 1.0, 1.0)  // Blue
+    SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
+    SIMD4(1.0, 1.0, 1.0, 0.25)   // White 0.25
+]
+
+var horGrid: [Float] = [
+//    -1.0,
+//     -0.875,
+     -0.75,
+//     -0.625,
+//     -0.5,
+     -0.375,
+//     -0.25,
+//     -0.125,
+     0.0,
+//     0.125,
+     0.25,
+//     0.375,
+     0.5,
+     0.625,
+     0.75,
+     0.875,
+//     1.0
 ]
 
 public class MetalLufs: MTKView, MTKViewDelegate {
     let commandQueue: MTLCommandQueue!
-    let pipelineState: MTLRenderPipelineState!
+    let vizPipelineState: MTLRenderPipelineState!
+    let gridPipelineState: MTLRenderPipelineState!
     
-//    var vizValues: [[[Float]]] = [[[]]]
     var vizValues: [[[Float]]] = Array(repeating: [[]], count: 3)
     
-//    var vertexBuffers: [MTLBuffer] = []
     var inVertexBuffer: MTLBuffer!
     var outVertexBuffer: MTLBuffer!
     var redVertexBuffer: MTLBuffer!
+    var horGridBuffer: MTLBuffer!
+    var verGridBuffer: MTLBuffer!
     
     let constants = MTLFunctionConstantValues()
     var length: UInt32 = 1024
@@ -44,33 +66,52 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         }
     }
     
-    public init(frame frameRect: CGRect) {
-        
+//    var target: Float
+    
+    init(frame frameRect: CGRect/*, target: ObservableAUParameter*/) {
+//        self.target = target.value
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
-        let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
+        let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()
+        let gridPipelineStateDescriptor = MTLRenderPipelineDescriptor()
         constants.setConstantValue(&length, type: .uint, index: 0)
-        
+//        NSLog("\(target.value)")
         let library = try! device?.makeDefaultLibrary(bundle: Bundle.main)
             
         let fragmentFunction = library!.makeFunction(name: "fragmentData")!
         let vertexFunction = try! library!.makeFunction(name: "vertexData", constantValues: constants)
-        pipelineStateDescriptor.vertexFunction = vertexFunction
-        pipelineStateDescriptor.fragmentFunction = fragmentFunction
+        let gridFunction = library!.makeFunction(name: "gridData")!
         
-        pipelineStateDescriptor.rasterSampleCount = 1
+        gridPipelineStateDescriptor.vertexFunction = gridFunction
+        gridPipelineStateDescriptor.fragmentFunction = fragmentFunction
+        vizPipelineStateDescriptor.vertexFunction = vertexFunction
+        vizPipelineStateDescriptor.fragmentFunction = fragmentFunction
         
-        let colorAttachment = pipelineStateDescriptor.colorAttachments[0]!
-        colorAttachment.pixelFormat = .bgra8Unorm
-        colorAttachment.isBlendingEnabled = true
-        colorAttachment.sourceRGBBlendFactor = .sourceAlpha
-        colorAttachment.sourceAlphaBlendFactor = .sourceAlpha
-        colorAttachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
-        colorAttachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        gridPipelineStateDescriptor.rasterSampleCount = 1
+        vizPipelineStateDescriptor.rasterSampleCount = 1
         
-        pipelineState = try! device!.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
+        let vizColorAttachment = vizPipelineStateDescriptor.colorAttachments[0]!
+        vizColorAttachment.pixelFormat = .bgra8Unorm
+        vizColorAttachment.isBlendingEnabled = true
+        vizColorAttachment.sourceRGBBlendFactor = .sourceAlpha
+        vizColorAttachment.sourceAlphaBlendFactor = .sourceAlpha
+        vizColorAttachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
+        vizColorAttachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        
+        let gridColorAttachment = gridPipelineStateDescriptor.colorAttachments[0]!
+        gridColorAttachment.pixelFormat = .bgra8Unorm
+        gridColorAttachment.isBlendingEnabled = true
+        gridColorAttachment.sourceRGBBlendFactor = .sourceAlpha
+        gridColorAttachment.sourceAlphaBlendFactor = .sourceAlpha
+        gridColorAttachment.destinationRGBBlendFactor = .oneMinusSourceAlpha
+        gridColorAttachment.destinationAlphaBlendFactor = .oneMinusSourceAlpha
+        
+        vizPipelineState = try! device!.makeRenderPipelineState(descriptor: vizPipelineStateDescriptor)
+        gridPipelineState = try! device!.makeRenderPipelineState(descriptor: gridPipelineStateDescriptor)
         
         super.init(frame: frameRect, device: device)
+        
+        horGridBuffer = device!.makeBuffer(bytes: horGrid, length: horGrid.count * MemoryLayout<Float>.size, options: [])
         
         updateVertexBuffers()
         
@@ -101,7 +142,8 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     public func draw(in view: MTKView) {
             guard let drawable = view.currentDrawable,
                   let renderPassDescriptor = view.currentRenderPassDescriptor,
-                  let pipelineState = pipelineState,
+                  let vizPipelineState = vizPipelineState,
+                  let gridPipelineState = gridPipelineState,
                   let commandQueue = commandQueue,
                   let inVertexBuffer = inVertexBuffer
         else {
@@ -111,7 +153,16 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             let commandBuffer = commandQueue.makeCommandBuffer()
             let renderEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
 
-            renderEncoder?.setRenderPipelineState(pipelineState)
+            renderEncoder?.setRenderPipelineState(gridPipelineState)
+        
+            renderEncoder?.setVertexBuffer(horGridBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[3],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+        renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: horGrid.count * 2)
+        
+        
+            renderEncoder?.setRenderPipelineState(vizPipelineState)
         
             renderEncoder?.setVertexBuffer(inVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[0],
@@ -125,12 +176,12 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
             
-            renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
-            renderEncoder?.setFragmentBytes(&lineColors[2],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
-            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-        
+//            renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
+//            renderEncoder?.setFragmentBytes(&lineColors[2],
+//                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+//                                                        index: 1)
+//            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+//        
 //            for (index, buffer) in vertexBuffers.enumerated() {
 //                renderEncoder?.setVertexBuffer(buffer, offset: 0, index: 0)
 //                renderEncoder?.setFragmentBytes(&lineColors[index],

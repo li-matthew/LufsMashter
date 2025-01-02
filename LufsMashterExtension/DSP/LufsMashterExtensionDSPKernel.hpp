@@ -21,7 +21,7 @@
 #import <algorithm>
 #import <vector>
 #import <span>
-//#import <chrono>
+#import <chrono>
 
 #import <Accelerate/Accelerate.h>
 
@@ -121,7 +121,7 @@ public:
      */
     void process(bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
-//        startTime = std::chrono::high_resolution_clock::now();
+        startTime = std::chrono::high_resolution_clock::now();
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
@@ -237,8 +237,6 @@ public:
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
-            LOG("PPP");
-            LOG("%f", outputBuffers[channel][0]);
             
             std::memcpy(inLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(inLufsFrame[channel], 1, &inRms, lufsWindow);
@@ -250,8 +248,7 @@ public:
                 currReduction += step;
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * currReduction;
             }
-            LOG("%f", currReduction);
-//            LOG("%f", tempBuffers[channel][0]);
+            
             vDSP_biquad(biquads[channel].setup,
                                     biquads[channel].delay,
                                     outputBuffers[channel], 1,
@@ -261,13 +258,13 @@ public:
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
             std::memcpy(outLuffers[channel], &outRms, sizeof(float));
             
-//            endTime = std::chrono::high_resolution_clock::now();
+            endTime = std::chrono::high_resolution_clock::now();
 
             // Compute elapsed time
-//            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
-//            double latencyInMicroseconds = duration.count();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+            double latencyInMicroseconds = duration.count() / 1000.0;
             LOG("PPP");
-//            LOG("%f", latencyInMicroseconds);
+            LOG("%f ms", latencyInMicroseconds);
         }
     }
     
@@ -315,6 +312,6 @@ public:
     };
     bool mBypassed = false;
     AUAudioFrameCount mMaxFramesToRender = 1024;
-//    std::chrono::high_resolution_clock::time_point startTime;
-//    std::chrono::high_resolution_clock::time_point endTime;
+    std::chrono::high_resolution_clock::time_point startTime;
+    std::chrono::high_resolution_clock::time_point endTime;
 };
