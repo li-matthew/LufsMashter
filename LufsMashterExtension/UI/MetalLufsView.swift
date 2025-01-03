@@ -10,11 +10,10 @@ import MetalKit
 
 struct MetalLufsView: NSViewRepresentable {
     var metalLufs: MetalLufs
-//    @State var target: ObservableAUParameter
+    @State var target: ObservableAUParameter
     
     func makeNSView(context: Context) -> MTKView {
-//        metalLufs.target = target.value
-//        metalLufs = MetalLufs(target: target)
+        metalLufs.target = target.value
         return metalLufs
     }
 
@@ -22,7 +21,8 @@ struct MetalLufsView: NSViewRepresentable {
     func updateNSView(_ uiView: MTKView, context: Context) {
         // This is where you can perform updates, like refreshing the Metal view
         if let metalLufs = uiView as? MetalLufs {
-//            metalLufs.target = target.value
+            metalLufs.target = target.value
+            metalLufs.updateTarget()
             metalLufs.setNeedsDisplay(metalLufs.bounds)
         }
     }

@@ -24,14 +24,14 @@ struct LufsMashterExtensionMainView: View {
                 ParameterSlider(param: parameterTree.global.ratio, title: "Ratio")
             }
             HStack {
-                Text(String(format: "%.2f dB Unprocessed LUFS", vizBuffers.buffers[0][0][0]))
-                Text(String(format: "%.2f dB OUT LUFS", vizBuffers.buffers[1][0][0]))
-                Text(String(format: "%.2f dB Reduction", 20 * log(vizBuffers.buffers[2][0][0])))
+                Text(String(format: "%.2f dB Unprocessed LUFS", 20 * log10(vizBuffers.buffers[0][0][0])))
+                Text(String(format: "%.2f dB OUT LUFS", 20 * log10(vizBuffers.buffers[1][0][0])))
+                Text(String(format: "%.2f dB Reduction", 20 * log10(vizBuffers.buffers[2][0][0])))
                 Text(String(format: "%.2f raw reduction", vizBuffers.buffers[2][0][0]))
             }.padding()
             HStack {
                 if let metalLufs = metalLufs {
-                    MetalLufsView(metalLufs: metalLufs/*, target: parameterTree.global.target*/)
+                    MetalLufsView(metalLufs: metalLufs, target: parameterTree.global.target)
                         .frame(width: 500, height: 200)
                 } else {
                     Text("Initializing Metal View...").frame(width: 500, height: 200)
@@ -42,7 +42,7 @@ struct LufsMashterExtensionMainView: View {
         }
         .onAppear {
             if metalLufs == nil {
-                metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 500, height: 200)/*, target: parameterTree.global.target*/)
+                metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 500, height: 200), target: parameterTree.global.target)
             }
             metalLufs?.metalView = vizBuffers
         }

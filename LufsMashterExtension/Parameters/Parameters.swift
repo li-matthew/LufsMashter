@@ -15,7 +15,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "target",
             name: "target",
             units: .generic,
-            valueRange: 0.0...1.0,
+            valueRange: 0.001...1.0,
             defaultValue: 1.0
         )
         ParameterSpec(

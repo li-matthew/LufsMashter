@@ -45,12 +45,10 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getInLuffers() else {
             return []
         }
-        let result: [[Float]] = buffer.map { row in row.map { val in
-            let normalizedValue = (20 * log10(val.floatValue) - (-80)) / (0 - (-80))  // Normalize between -80 dB and 0 dB
-            
-            // Map [0, 1] to [-1, 1]
-            return 2 * normalizedValue - 1  // Map to [-1, 1]
-        } }
+        let result: [[Float]] = buffer.map { row in
+            row.map { $0.floatValue
+            }
+        }
         
         return result
     }
@@ -70,12 +68,10 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getOutLuffers() else {
             return []
         }
-        let result: [[Float]] = buffer.map { row in row.map { val in
-            let normalizedValue = (20 * log10(val.floatValue) - (-80)) / (0 - (-80))  // Normalize between -80 dB and 0 dB
-            
-            // Map [0, 1] to [-1, 1]
-            return 2 * normalizedValue - 1  // Map to [-1, 1]
-        } }
+        let result: [[Float]] = buffer.map { row in
+            row.map { $0.floatValue
+            }
+        }
         return result
     }
     

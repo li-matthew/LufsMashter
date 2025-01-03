@@ -30,7 +30,6 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     var hostingController: HostingController<LufsMashterExtensionMainView>?
     
     private var bufferSubject = CurrentValueSubject<[[[Float]]], Never>([[]])
-    private var targetSubject = CurrentValueSubject<Float, Never>(0.0)
     
     private var observation: NSKeyValueObservation?
     

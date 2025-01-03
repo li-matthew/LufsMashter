@@ -21,7 +21,7 @@ struct ParameterSlider: View {
             SmallKnob(value: $param.value, range: param.min...param.max)
                 .accessibility(identifier: param.displayName)
             if (param.displayName == "target") {
-                Text(String(format: "%.2f dBs", (20 * log(param.value))))
+                Text(String(format: "%.2f dBs", (20 * log10(param.value))))
             } else {
                 Text(String(format: "%.2f", param.value))
             }

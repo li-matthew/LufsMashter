@@ -12,27 +12,17 @@ var lineColors: [SIMD4<Float>] = [
     SIMD4(1.0, 0.0, 0.0, 1.0), // Red
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
-    SIMD4(1.0, 1.0, 1.0, 0.25)   // White 0.25
+    SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
+    SIMD4(1.0, 1.0, 1.0, 1.0)
 ]
 
 var horGrid: [Float] = [
-//    -1.0,
-//     -0.875,
-     -0.75,
-//     -0.625,
-//     -0.5,
-     -0.375,
-//     -0.25,
-//     -0.125,
-     0.0,
-//     0.125,
+     0.125,
      0.25,
-//     0.375,
      0.5,
      0.625,
      0.75,
      0.875,
-//     1.0
 ]
 
 public class MetalLufs: MTKView, MTKViewDelegate {
@@ -47,6 +37,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     var redVertexBuffer: MTLBuffer!
     var horGridBuffer: MTLBuffer!
     var verGridBuffer: MTLBuffer!
+    var targetBuffer: MTLBuffer!
     
     let constants = MTLFunctionConstantValues()
     var length: UInt32 = 1024
@@ -66,16 +57,16 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         }
     }
     
-//    var target: Float
+    var target: Float
     
-    init(frame frameRect: CGRect/*, target: ObservableAUParameter*/) {
-//        self.target = target.value
+    init(frame frameRect: CGRect, target: ObservableAUParameter) {
+        self.target = target.value
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()
         let gridPipelineStateDescriptor = MTLRenderPipelineDescriptor()
         constants.setConstantValue(&length, type: .uint, index: 0)
-//        NSLog("\(target.value)")
+        
         let library = try! device?.makeDefaultLibrary(bundle: Bundle.main)
             
         let fragmentFunction = library!.makeFunction(name: "fragmentData")!
@@ -135,6 +126,10 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
     }
     
+    func updateTarget() {
+        targetBuffer = device!.makeBuffer(bytes: [target], length: 1 * MemoryLayout<Float>.size, options: [])
+    }
+    
     public func mtkView(_: MTKView, drawableSizeWillChange _: CGSize) {
         // We may want to resize the texture.
     }
@@ -159,7 +154,15 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             renderEncoder?.setFragmentBytes(&lineColors[3],
                                                         length: MemoryLayout<SIMD4<Float>>.stride,
                                                         index: 1)
-        renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: horGrid.count * 2)
+            renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: horGrid.count * 2)
+            
+        
+            
+            renderEncoder?.setVertexBuffer(targetBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[4],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: 2)
         
         
             renderEncoder?.setRenderPipelineState(vizPipelineState)
@@ -176,11 +179,11 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
             
-//            renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
-//            renderEncoder?.setFragmentBytes(&lineColors[2],
-//                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-//                                                        index: 1)
-//            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+            renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[2],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
 //        
 //            for (index, buffer) in vertexBuffers.enumerated() {
 //                renderEncoder?.setVertexBuffer(buffer, offset: 0, index: 0)

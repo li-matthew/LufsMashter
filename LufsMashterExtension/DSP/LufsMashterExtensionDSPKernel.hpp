@@ -46,12 +46,16 @@ public:
         mSampleRate = inSampleRate;
         
         for (int i = 0; i < inputChannelCount; i++) {
-            biquads.push_back((Biquad){
+            biquadIn.push_back((Biquad){
+                .setup = vDSP_biquad_CreateSetup(Coeffs, stages)
+            });
+            biquadOut.push_back((Biquad){
                 .setup = vDSP_biquad_CreateSetup(Coeffs, stages)
             });
             
             for (int j = 0; j < 4; j++) {
-                biquads[i].delay[j] = 0.0;
+                biquadIn[i].delay[j] = 0.0;
+                biquadOut[i].delay[j] = 0.0;
             }
         }
     }
@@ -152,9 +156,10 @@ public:
          nullptr);	// currentMeasureDownbeatPosition
          }
          */
-        
+//        float targetVal = pow(10.0, mTarget / 20.0);
+//        float targetDb = 20 * log10(mTarget);
+//        float targetGain = pow(10.0, targetDb / 20.0);
         float targetEnergy = lufsWindow * mTarget * mTarget;
-        
         
         float attack = mAttack;
         float release = mRelease;
@@ -169,17 +174,18 @@ public:
             if (!tempBuffers[channel]) {
                 tempBuffers[channel] = new float[frameCount];
             }
+            LOG("PPP");
             
             // Do your sample by sample dsp here...
-            vDSP_biquad_SetCoefficientsDouble(biquads[channel].setup, Coeffs, 0, 1);
-            vDSP_biquad(biquads[channel].setup,
-                                    biquads[channel].delay,
+            vDSP_biquad_SetCoefficientsDouble(biquadIn[channel].setup, Coeffs, 0, 1);
+            vDSP_biquad_SetCoefficientsDouble(biquadOut[channel].setup, Coeffs, 0, 1);
+            
+            vDSP_biquad(biquadIn[channel].setup,
+                                    biquadIn[channel].delay,
                                     inputBuffers[channel], 1,
-                                    outputBuffers[channel], 1,
+                                    tempBuffers[channel], 1,
                                     frameCount);
-            
-            
-            
+
             // Shift lufsFrame
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
@@ -193,19 +199,23 @@ public:
             vDSP_svesq(outLufsFrame[channel] + frameCount, 1, &energy, lufsWindow - frameCount);
             
             float currEnergy;
-            vDSP_svesq(outputBuffers[channel], 1, &currEnergy, frameCount);
+            vDSP_svesq(tempBuffers[channel], 1, &currEnergy, frameCount);
 
             // TODO
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
-            
+//            LOG("PPP");
+//            LOG("%f", outLufsFrame[channel][0]);
+//            LOG("%f", inLufsFrame[channel][0]);
+//            LOG("%f", outLuffers[channel][0]);
+//            LOG("%f", inLuffers[channel][0]);
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
                     if (targetEnergy < energy) {
                         reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
                     } else {
-                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
+                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 1e-6f));
                     }
                     
                     reduction = (1.0f - attack) * currReduction + attack * reduction;
@@ -219,7 +229,7 @@ public:
                     if (targetEnergy < energy) {
                         reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
                     } else {
-                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 0.0f));
+                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 1e-6f));
                     }
                     
                     reduction = (1.0f - attack) * currReduction + attack * reduction;
@@ -230,15 +240,15 @@ public:
                     reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             }
-
-            *gainReduction[channel] = (float)std::clamp(reduction, 0.0f, 1.0f);
+            
+            reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
             
             // Add to Gain Reduction
             std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
             
-            std::memcpy(inLufsFrame[channel], outputBuffers[channel], frameCount * sizeof(float));
+            std::memcpy(inLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(inLufsFrame[channel], 1, &inRms, lufsWindow);
             std::memcpy(inLuffers[channel], &inRms, sizeof(float));
             
@@ -249,22 +259,23 @@ public:
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * currReduction;
             }
             
-            vDSP_biquad(biquads[channel].setup,
-                                    biquads[channel].delay,
+            vDSP_biquad(biquadOut[channel].setup,
+                                    biquadOut[channel].delay,
                                     outputBuffers[channel], 1,
                                     tempBuffers[channel], 1,
                                     frameCount);
+            
             std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
             std::memcpy(outLuffers[channel], &outRms, sizeof(float));
             
+            
             endTime = std::chrono::high_resolution_clock::now();
 
             // Compute elapsed time
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
-            double latencyInMicroseconds = duration.count() / 1000.0;
-            LOG("PPP");
-            LOG("%f ms", latencyInMicroseconds);
+//            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+//            double latencyInMicroseconds = duration.count() / 1000.0;
+           
         }
     }
     
@@ -286,13 +297,15 @@ public:
     
     // MARK: Member Variables
     AUHostMusicalContextBlock mMusicalContextBlock;
-    std::vector <Biquad> biquads;
+    std::vector <Biquad> biquadIn;
+    std::vector <Biquad> biquadOut;
     
-    const int lufsWindow = 17640;
+//    const int lufsWindow = 17640;
+    const int lufsWindow = 132300;
     const int luffersLength = 1024;
     double mSampleRate = 44100.0;
     
-    double mTarget = 0.0;
+    double mTarget = 1.0;
     double mAttack = 0.5;
     double mRelease = 0.5;
     
