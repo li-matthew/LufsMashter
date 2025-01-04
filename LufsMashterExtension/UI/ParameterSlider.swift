@@ -17,7 +17,7 @@ struct ParameterSlider: View {
     
     var body: some View {
         VStack {
-            Text(title)
+            Text(title).fontWeight(.bold)
             SmallKnob(value: $param.value, range: param.min...param.max)
                 .accessibility(identifier: param.displayName)
             if (param.displayName == "target") {
@@ -25,6 +25,6 @@ struct ParameterSlider: View {
             } else {
                 Text(String(format: "%.2f", param.value))
             }
-        }.padding()
+        }
     }
 }

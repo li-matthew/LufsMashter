@@ -84,6 +84,12 @@ public:
             case LufsMashterExtensionParameterAddress::release:
                 mRelease = value;
                 break;
+            case LufsMashterExtensionParameterAddress::ratio:
+                mRatio = value;
+                break;
+            case LufsMashterExtensionParameterAddress::knee:
+                mKnee = value;
+                break;
                 // Add a case for each parameter in LufsMashterExtensionParameterAddresses.h
         }
     }
@@ -98,7 +104,10 @@ public:
                 return (AUValue)mAttack;
             case LufsMashterExtensionParameterAddress::release:
                 return (AUValue)mRelease;
-                
+            case LufsMashterExtensionParameterAddress::ratio:
+                return (AUValue)mRatio;
+            case LufsMashterExtensionParameterAddress::knee:
+                return (AUValue)mKnee;
             default: return 0.f;
         }
     }
@@ -123,7 +132,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
         startTime = std::chrono::high_resolution_clock::now();
         /*
@@ -192,7 +201,6 @@ public:
             std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
             std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
             std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
-            
         
             // Section Energies
             float energy;
@@ -200,44 +208,51 @@ public:
             
             float currEnergy;
             vDSP_svesq(tempBuffers[channel], 1, &currEnergy, frameCount);
-
+            LOG("%f", mRatio);
             // TODO
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
-//            LOG("PPP");
-//            LOG("%f", outLufsFrame[channel][0]);
-//            LOG("%f", inLufsFrame[channel][0]);
-//            LOG("%f", outLuffers[channel][0]);
-//            LOG("%f", inLuffers[channel][0]);
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
-                    if (targetEnergy < energy) {
-                        reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
-                    } else {
-                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 1e-6f));
-                    }
-                    
-                    reduction = (1.0f - attack) * currReduction + attack * reduction;
+                    float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
+                    float dynamicRatio = mRatio + (excessEnergy / targetEnergy);
+
+                    // Custom power curve for reduction
+                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / dynamicRatio);
+
+//                    float kneeEnergy = std::max(excessEnergy - targetEnergy, 0.0f);
+//                    float smoothKnee = 1.0f / (1.0f + exp(-kneeEnergy / mKnee));
+
+                    reduction = reductionCurve/* * smoothKnee*/;
+                    reduction = currReduction - attack * (reduction - currReduction);
+//                    reduction = (1.0f - attack) * currReduction - attack * reduction;
                 } else {
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
-                    
-                    reduction = (1.0f - release) * currReduction + release * reduction;
+                    reduction = currReduction + release * (reduction - currReduction);
+//                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
-                    if (targetEnergy < energy) {
-                        reduction = sqrt(1e-6f / (std::max(currEnergy + (energy - targetEnergy), 1e-6f)));
-                    } else {
-                        reduction = sqrt(std::max((targetEnergy - energy) / std::max(currEnergy, 1e-6f), 1e-6f));
-                    }
+                    float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
                     
-                    reduction = (1.0f - attack) * currReduction + attack * reduction;
+                    float dynamicRatio = mRatio + (excessEnergy / targetEnergy);
+
+                    // Custom power curve for reduction
+                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / dynamicRatio);
+
+//                    float kneeEnergy = std::max(excessEnergy - targetEnergy, 0.0f);
+//                    float smoothKnee = 1.0f / (1.0f + exp(-kneeEnergy / mKnee));
+
+                    reduction = reductionCurve/* * smoothKnee*/;
+                    reduction = currReduction - attack * (reduction - currReduction);
+//                    reduction = (1.0f - attack) * currReduction - attack * reduction;
                 } else {
                     *prevOverThreshold = false;
                     reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
-                    
-                    reduction = (1.0f - release) * currReduction + release * reduction;
+                    reduction = currReduction + release * (reduction - currReduction);
+
+//                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             }
             
@@ -251,6 +266,9 @@ public:
             std::memcpy(inLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(inLufsFrame[channel], 1, &inRms, lufsWindow);
             std::memcpy(inLuffers[channel], &inRms, sizeof(float));
+            
+            *currIn = inRms;
+            *currRed = *gainReduction[channel];
             
             float step = (*gainReduction[channel] - currReduction) / frameCount;
             
@@ -268,13 +286,14 @@ public:
             std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
             std::memcpy(outLuffers[channel], &outRms, sizeof(float));
-            
+            *currOut = outRms;
             
             endTime = std::chrono::high_resolution_clock::now();
 
             // Compute elapsed time
-//            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
-//            double latencyInMicroseconds = duration.count() / 1000.0;
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+            double latencyInMicroseconds = duration.count() / 1000.0;
+            LOG("%f ms", latencyInMicroseconds);
            
         }
     }
@@ -308,6 +327,8 @@ public:
     double mTarget = 1.0;
     double mAttack = 0.5;
     double mRelease = 0.5;
+    double mRatio = 2.0;
+    double mKnee = 12.0;
     
     int stages = 2;
     double Coeffs[10] = {

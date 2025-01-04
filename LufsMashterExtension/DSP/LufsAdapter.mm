@@ -73,4 +73,22 @@
     return [resultBuffer copy];
 }
 
+- (NSNumber*)getCurrIn {
+    const float& val = _processHelper->getCurrIn();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrOut {
+    const float& val = _processHelper->getCurrOut();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrRed {
+    const float& val = _processHelper->getCurrRed();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
 @end

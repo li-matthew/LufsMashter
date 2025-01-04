@@ -1,5 +1,5 @@
 //
-//  DataPlot.swift
+//  MetalLufs.swift
 //  LoudMashter
 //
 //  Created by mashen on 12/11/24.
@@ -9,8 +9,8 @@ import MetalKit
 import Combine
 
 var lineColors: [SIMD4<Float>] = [
-    SIMD4(1.0, 0.0, 0.0, 1.0), // Red
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
+    SIMD4(1.0, 0.0, 0.0, 1.0), // Red
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
     SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
     SIMD4(1.0, 1.0, 1.0, 1.0)
@@ -44,6 +44,8 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     
     private var cancellables: Set<AnyCancellable> = []
     
+//    private let overLayer: OverLayer!
+    
     var metalView: ObservableBuffers? {
         didSet {
             // Subscribe to updates from the ViewModel
@@ -61,6 +63,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     
     init(frame frameRect: CGRect, target: ObservableAUParameter) {
         self.target = target.value
+//        self.overLayer = OverLayer()
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()
@@ -101,6 +104,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         gridPipelineState = try! device!.makeRenderPipelineState(descriptor: gridPipelineStateDescriptor)
         
         super.init(frame: frameRect, device: device)
+//        self.layer?.addSublayer(overLayer)
         
         horGridBuffer = device!.makeBuffer(bytes: horGrid, length: horGrid.count * MemoryLayout<Float>.size, options: [])
         
@@ -184,14 +188,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                                                         length: MemoryLayout<SIMD4<Float>>.stride,
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-//        
-//            for (index, buffer) in vertexBuffers.enumerated() {
-//                renderEncoder?.setVertexBuffer(buffer, offset: 0, index: 0)
-//                renderEncoder?.setFragmentBytes(&lineColors[index],
-//                                                length: MemoryLayout<SIMD4<Float>>.stride,
-//                                                index: 1)
-//                renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: Int(length))
-//            }
 
             renderEncoder?.endEncoding()
             commandBuffer?.present(drawable)

@@ -47,6 +47,18 @@ public:
     const std::vector<float*>& getOutLuffers() const {
         return mOutLuffers;
     }
+    
+    const float& getCurrIn() const {
+        return currIn;
+    }
+    
+    const float& getCurrOut() const {
+        return currOut;
+    }
+    
+    const float& getCurrRed() const {
+        return currRed;
+    }
 
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
     {
@@ -91,7 +103,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(&prevOverThreshold, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -186,10 +198,6 @@ public:
 		};
 	}
     
-    
-    
-    
-    
 private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
@@ -200,6 +208,10 @@ private:
     std::vector<float*> mInLuffers; // buffer of lufs
     std::vector<float*> mOutLuffers;
     std::vector<float*> mGainReduction;
+    
+    float currIn = 1e-6;
+    float currOut = 1e-6;
+    float currRed = 1.0;
     
     bool prevOverThreshold = false;
     BufferedInputBus& mBufferedInputBus;

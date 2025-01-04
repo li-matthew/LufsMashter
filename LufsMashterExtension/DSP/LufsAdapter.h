@@ -13,5 +13,7 @@
 - (NSArray<NSArray<NSNumber*>*>*)getInLuffers;
 - (NSArray<NSArray<NSNumber*>*>*)getGainReduction;
 - (NSArray<NSArray<NSNumber*>*>*)getOutLuffers;
-
+- (NSNumber*)getCurrIn;
+- (NSNumber*)getCurrOut;
+- (NSNumber*)getCurrRed;
 @end

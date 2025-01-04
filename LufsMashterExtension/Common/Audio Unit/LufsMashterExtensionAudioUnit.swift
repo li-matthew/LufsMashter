@@ -75,6 +75,33 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         return result
     }
     
+    public func getCurrIn() -> Float {
+        guard let val = adapter!.getCurrIn() else {
+            return 1e-6
+        }
+        let result: Float = val.floatValue
+        
+        return result
+    }
+    
+    public func getCurrOut() -> Float {
+        guard let val = adapter!.getCurrOut() else {
+            return 1e-6
+        }
+        let result: Float = val.floatValue
+        
+        return result
+    }
+    
+    public func getCurrRed() -> Float {
+        guard let val = adapter!.getCurrRed() else {
+            return 1.0
+        }
+        let result: Float = val.floatValue
+        
+        return result
+    }
+    
     public override var inputBusses: AUAudioUnitBusArray {
         return _inputBusses
     }

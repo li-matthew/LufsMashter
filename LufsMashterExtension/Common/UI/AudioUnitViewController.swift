@@ -18,18 +18,28 @@ class ObservableBuffers: ObservableObject {
     }
 }
 
+class ObservableVals: ObservableObject {
+    @Published var vals: [Float]
+    
+    init() {
+        vals = Array(repeating: 0.0, count: 3)
+    }
+}
+
 private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "AudioUnitViewController")
 
 @MainActor
 public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     var vizBuffers: ObservableBuffers = ObservableBuffers()
+    var meterVals: ObservableVals = ObservableVals()
     
     var audioUnit: AUAudioUnit?
     var timer: Timer?
     
     var hostingController: HostingController<LufsMashterExtensionMainView>?
     
-    private var bufferSubject = CurrentValueSubject<[[[Float]]], Never>([[]])
+    private var bufferSubject = CurrentValueSubject<[[[Float]]], Never>([[[]]])
+    private var valSubject = CurrentValueSubject<[Float], Never>([])
     
     private var observation: NSKeyValueObservation?
     
@@ -66,6 +76,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.updateVizBuffers()
+                self?.updateMeterVals()
             }
         }
     }
@@ -76,6 +87,14 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         bufferSubject.send(buffers)
         vizBuffers.buffers = buffers
     }
+    
+    public func updateMeterVals() {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        let vals = [audioUnit.getCurrIn(), audioUnit.getCurrOut(), audioUnit.getCurrRed()]
+        valSubject.send(vals)
+        meterVals.vals = vals
+        NSLog("\(vals)")
+    }
 
     deinit {
         timer?.invalidate()
@@ -84,7 +103,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     public override func viewDidLoad() {
         super.viewDidLoad()
         // Accessing the `audioUnit` parameter prompts the AU to be created via createAudioUnit(with:)
-        
+        self.preferredContentSize = CGSize(width: 1000, height: 1000)
         guard let audioUnit = self.audioUnit else {
             return
         }
@@ -142,7 +161,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers, meterVals: meterVals)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds
