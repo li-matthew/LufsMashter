@@ -93,7 +93,6 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         let vals = [audioUnit.getCurrIn(), audioUnit.getCurrOut(), audioUnit.getCurrRed()]
         valSubject.send(vals)
         meterVals.vals = vals
-        NSLog("\(vals)")
     }
 
     deinit {
@@ -103,7 +102,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     public override func viewDidLoad() {
         super.viewDidLoad()
         // Accessing the `audioUnit` parameter prompts the AU to be created via createAudioUnit(with:)
-        self.preferredContentSize = CGSize(width: 1000, height: 1000)
+//        self.preferredContentSize = CGSize(width: 1000, height: 1000)
         guard let audioUnit = self.audioUnit else {
             return
         }
