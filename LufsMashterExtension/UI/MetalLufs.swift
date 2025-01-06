@@ -9,8 +9,8 @@ import MetalKit
 import Combine
 
 var lineColors: [SIMD4<Float>] = [
+    SIMD4(1.0, 1.0, 1.0, 0.5), // gray
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
-    SIMD4(1.0, 0.0, 0.0, 1.0), // Red
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
     SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
     SIMD4(1.0, 1.0, 1.0, 1.0)

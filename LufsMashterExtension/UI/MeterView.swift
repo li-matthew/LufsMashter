@@ -21,7 +21,7 @@ struct MeterView: View {
         VStack {
             Text(title).fontWeight(.bold)
             if units == "LUFS" {
-                Text(String(format: "%.2f %@", 20 * log10(val), units))
+                Text(String(format: "%.2f %@", 20 * log10(val), units)).fontWeight(.bold)
             } else {
                 Text(String(format: "%.2f %@", val, units))
             }

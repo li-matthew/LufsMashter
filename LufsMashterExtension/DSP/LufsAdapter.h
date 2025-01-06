@@ -11,8 +11,8 @@
 @property (nonatomic, readonly) AUProcessHelper * processHelper;
 - (instancetype)initWithProcessHelper:(AUProcessHelper*)existingProcessHelper;
 - (NSArray<NSArray<NSNumber*>*>*)getInLuffers;
-- (NSArray<NSArray<NSNumber*>*>*)getGainReduction;
 - (NSArray<NSArray<NSNumber*>*>*)getOutLuffers;
+- (NSArray<NSNumber*>*)getGainReduction;
 - (NSNumber*)getCurrIn;
 - (NSNumber*)getCurrOut;
 - (NSNumber*)getCurrRed;

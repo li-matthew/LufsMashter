@@ -53,14 +53,11 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         return result
     }
     
-    public func getGainReduction() -> [[Float]] {
+    public func getGainReduction() -> [Float] {
         guard let buffer = adapter!.getGainReduction() else {
             return []
         }
-        let result: [[Float]] = buffer.map { row in
-            row.map { $0.floatValue
-            }
-        }
+        let result: [Float] = buffer.map { $0.floatValue }
         return result
     }
     

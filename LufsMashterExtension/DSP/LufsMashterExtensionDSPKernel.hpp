@@ -132,7 +132,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> lookAhead, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> lookAhead, float* gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
         startTime = std::chrono::high_resolution_clock::now();
         /*
@@ -170,15 +170,18 @@ public:
 //        float targetGain = pow(10.0, targetDb / 20.0);
         float targetEnergy = lufsWindow * mTarget * mTarget;
         
-        float attack = mAttack;
-        float release = mRelease;
-
+        float attack = mAttack / 1000.0;
+        float release = mRelease / 1000.0;
+        float currReduction = *gainReduction;
+        float reds[] = {1.0, 1.0};
+        float finalReduction = 1.0;
+        
+        std::copy_backward(gainReduction, gainReduction + (luffersLength - 1), gainReduction + luffersLength);
         
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
-            float currReduction = *gainReduction[channel];
+            
             float inRms;
-            float outRms;
             
             if (!tempBuffers[channel]) {
                 tempBuffers[channel] = new float[frameCount];
@@ -190,72 +193,72 @@ public:
             vDSP_biquad_SetCoefficientsDouble(biquadOut[channel].setup, Coeffs, 0, 1);
             
             vDSP_biquad(biquadIn[channel].setup,
-                                    biquadIn[channel].delay,
-                                    inputBuffers[channel], 1,
-                                    tempBuffers[channel], 1,
-                                    frameCount);
-
+                        biquadIn[channel].delay,
+                        inputBuffers[channel], 1,
+                        tempBuffers[channel], 1,
+                        frameCount);
+            
             // Shift lufsFrame
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
-            std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
-//            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
+            //            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
             std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
             std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
-        
+            
             // Section Energies
             float energy;
             vDSP_svesq(outLufsFrame[channel] + frameCount, 1, &energy, lufsWindow - frameCount);
             
             float currEnergy;
             vDSP_svesq(tempBuffers[channel], 1, &currEnergy, frameCount);
-            LOG("%f", mRatio);
-            // TODO
+            
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
-
-                    // Custom power curve for reduction
-                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
-
+                    
+                    //                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
+                    float reductionCurve = (excessEnergy / targetEnergy) * mRatio;
+                    
                     reduction = reductionCurve;
                     reduction = currReduction - attack * (reduction - currReduction);
-//                    reduction = (1.0f - attack) * currReduction - attack * reduction;
+                    
                 } else {
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
-                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    //                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    float reductionCurve = (missingEnergy / targetEnergy) * mRatio;
                     reduction = reductionCurve;
-//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
-                    reduction = currReduction + release * (reductionCurve - currReduction);
-//                    reduction = (1.0f - release) * currReduction + release * reduction;
+                    
+                    reduction = currReduction + release * (reductionCurve + currReduction);
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
-
-                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
+                    
+                    //                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
+                    float reductionCurve = (excessEnergy / targetEnergy) * mRatio;
                     
                     reduction = reductionCurve;
                     reduction = currReduction - attack * (reduction - currReduction);
-//                    reduction = (1.0f - attack) * currReduction - attack * reduction;
                 } else {
                     *prevOverThreshold = false;
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
-                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    //                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    float reductionCurve = (missingEnergy / targetEnergy) * mRatio;
+                    
+                    
                     reduction = reductionCurve;
-//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
-                    reduction = currReduction + release * (reduction - currReduction);
-//                    reduction = (1.0f - release) * currReduction + release * reduction;
+                    reduction = currReduction + release * (reduction + currReduction);
                 }
             }
             
-            reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
+            reduction = (float)std::clamp(reduction, 1e-3f, 1.0f);
             
             // Add to Gain Reduction
-            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
+            reds[channel] = reduction;
+//            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
             
@@ -264,9 +267,16 @@ public:
             std::memcpy(inLuffers[channel], &inRms, sizeof(float));
             
             *currIn = inRms;
-            *currRed = *gainReduction[channel];
-            
-            float step = (*gainReduction[channel] - currReduction) / frameCount;
+//            *currRed = *gainReduction[channel];
+        }
+        
+        finalReduction = std::min(reds[0], reds[1]);
+        std::memcpy(gainReduction, &finalReduction, sizeof(float));
+        *currRed = *gainReduction;
+        
+        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
+            float outRms;
+            float step = (*gainReduction - currReduction) / frameCount;
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 currReduction += step;
@@ -290,7 +300,6 @@ public:
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
             double latencyInMicroseconds = duration.count() / 1000.0;
             LOG("%f ms", latencyInMicroseconds);
-           
         }
     }
     

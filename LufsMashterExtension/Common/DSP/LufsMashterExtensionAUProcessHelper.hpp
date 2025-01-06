@@ -40,7 +40,7 @@ public:
         return mInLuffers;
     }
     
-    const std::vector<float*>& getGainReduction() const {
+    const float* getGainReduction() const {
         return mGainReduction;
     }
     
@@ -68,21 +68,23 @@ public:
         mOutLufsFrame.resize(inputChannelCount);
         mInLuffers.resize(inputChannelCount);
         mOutLuffers.resize(inputChannelCount);
-        mGainReduction.resize(inputChannelCount);
+        
         mLookAhead.resize(inputChannelCount);
+        
+//        mGainReduction.resize(1);
+        mGainReduction = new float[1024];
+        std::fill(mGainReduction, mGainReduction + 1024, 1.0f);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mInLufsFrame[channel] = new float[132300];
             mOutLufsFrame[channel] = new float[132300];
             mInLuffers[channel] = new float[1024];
             mOutLuffers[channel] = new float[1024];
-            mGainReduction[channel] = new float[1024];
             mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
             std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 0.0f);
             std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 0.0f);
-            std::fill(mGainReduction[channel], mGainReduction[channel] + 1024, 1.0f);
             std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
     }
@@ -212,7 +214,7 @@ private:
     std::vector<float*> mOutLufsFrame;// samples for calculating lufs
     std::vector<float*> mInLuffers; // buffer of lufs
     std::vector<float*> mOutLuffers;
-    std::vector<float*> mGainReduction;
+    float* mGainReduction;
     
     float currIn = 1e-6;
     float currOut = 1e-6;

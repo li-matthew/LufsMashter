@@ -83,7 +83,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     
     public func updateVizBuffers() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffers = [audioUnit.getInLuffers(), audioUnit.getOutLuffers(), audioUnit.getGainReduction()]
+        let buffers = [audioUnit.getInLuffers(), audioUnit.getOutLuffers(), [audioUnit.getGainReduction()]]
         bufferSubject.send(buffers)
         vizBuffers.buffers = buffers
     }
