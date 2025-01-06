@@ -37,7 +37,7 @@ struct LufsMashterExtensionMainView: View {
                 Spacer()
                 ParameterSlider(param: parameterTree.global.release, title: "Release")
                 Spacer()
-                ParameterSlider(param: parameterTree.global.ratio, title: "Ratio")
+                ParameterSlider(param: parameterTree.global.smooth, title: "Smooth")
 //                ParameterSlider(param: parameterTree.global.knee, title: "Knee")
             }
             VStack {
