@@ -23,23 +23,23 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "attack",
             name: "attack",
             units: .generic,
-            valueRange: 0.01...10.0,
-            defaultValue: 0.1
+            valueRange: 1.0...1000.0,
+            defaultValue: 10.0
         )
         ParameterSpec(
             address: .release,
             identifier: "release",
             name: "release",
             units: .generic,
-            valueRange: 0.01...10.0,
-            defaultValue: 0.1
+            valueRange: 1.0...1000.0,
+            defaultValue: 10.0
         )
         ParameterSpec(
             address: .smooth,
             identifier: "smooth",
             name: "smooth",
             units: .generic,
-            valueRange: 0.1...2.0,
+            valueRange: 0.1...1.0,
             defaultValue: 1.0
         )
         ParameterSpec(
