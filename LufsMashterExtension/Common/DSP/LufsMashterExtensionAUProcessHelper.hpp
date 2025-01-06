@@ -69,6 +69,7 @@ public:
         mInLuffers.resize(inputChannelCount);
         mOutLuffers.resize(inputChannelCount);
         mGainReduction.resize(inputChannelCount);
+        mLookAhead.resize(inputChannelCount);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mInLufsFrame[channel] = new float[132300];
@@ -76,11 +77,13 @@ public:
             mInLuffers[channel] = new float[1024];
             mOutLuffers[channel] = new float[1024];
             mGainReduction[channel] = new float[1024];
+            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
             std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 0.0f);
             std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 0.0f);
             std::fill(mGainReduction[channel], mGainReduction[channel] + 1024, 1.0f);
+            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
     }
 
@@ -103,7 +106,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mLookAhead, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -202,6 +205,8 @@ private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
+    
+    std::vector<float*> mLookAhead;
     
     std::vector<float*> mInLufsFrame;
     std::vector<float*> mOutLufsFrame;// samples for calculating lufs

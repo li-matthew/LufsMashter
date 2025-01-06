@@ -63,7 +63,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     
     init(frame frameRect: CGRect, target: ObservableAUParameter) {
         self.target = target.value
-//        self.overLayer = OverLayer()
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()

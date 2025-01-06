@@ -132,7 +132,7 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> lookAhead, std::span<float*> gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
         startTime = std::chrono::high_resolution_clock::now();
         /*
@@ -199,6 +199,7 @@ public:
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
             std::copy_backward(gainReduction[channel], gainReduction[channel] + (luffersLength - 1), gainReduction[channel] + luffersLength);
+//            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
             std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
             std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
         
@@ -216,42 +217,37 @@ public:
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
-                    float dynamicRatio = mRatio + (excessEnergy / targetEnergy);
 
                     // Custom power curve for reduction
-                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / dynamicRatio);
+                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
 
-//                    float kneeEnergy = std::max(excessEnergy - targetEnergy, 0.0f);
-//                    float smoothKnee = 1.0f / (1.0f + exp(-kneeEnergy / mKnee));
-
-                    reduction = reductionCurve/* * smoothKnee*/;
+                    reduction = reductionCurve;
                     reduction = currReduction - attack * (reduction - currReduction);
 //                    reduction = (1.0f - attack) * currReduction - attack * reduction;
                 } else {
-                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
-                    reduction = currReduction + release * (reduction - currReduction);
+                    float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
+                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    reduction = reductionCurve;
+//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
+                    reduction = currReduction + release * (reductionCurve - currReduction);
 //                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
+
+                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / mRatio);
                     
-                    float dynamicRatio = mRatio + (excessEnergy / targetEnergy);
-
-                    // Custom power curve for reduction
-                    float reductionCurve = pow(excessEnergy / targetEnergy, 1.0f / dynamicRatio);
-
-//                    float kneeEnergy = std::max(excessEnergy - targetEnergy, 0.0f);
-//                    float smoothKnee = 1.0f / (1.0f + exp(-kneeEnergy / mKnee));
-
-                    reduction = reductionCurve/* * smoothKnee*/;
+                    reduction = reductionCurve;
                     reduction = currReduction - attack * (reduction - currReduction);
 //                    reduction = (1.0f - attack) * currReduction - attack * reduction;
                 } else {
                     *prevOverThreshold = false;
-                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
+                    float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
+                    float reductionCurve = pow(missingEnergy / targetEnergy, 1.0f / mRatio);
+                    reduction = reductionCurve;
+//                    reduction = *gainReduction[channel] + ((1.0f - *gainReduction[channel])); // Smooth release
                     reduction = currReduction + release * (reduction - currReduction);
-
 //                    reduction = (1.0f - release) * currReduction + release * reduction;
                 }
             }
