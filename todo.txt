@@ -3,3 +3,4 @@ Latency
 Labels
 
 compare frames incoming energy with to be removed energy
+parameter for corners smooth

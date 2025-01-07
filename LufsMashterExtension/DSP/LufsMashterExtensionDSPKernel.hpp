@@ -220,9 +220,9 @@ public:
             float truePeak = 0.0f;
             vDSP_maxmgv(filteredBuffer, 1, &truePeak, frameCount);
             
-            LOG("DDD");
-            LOG("%f", truePeak);
-            LOG("%f", 20 * log10(truePeak));
+//            LOG("DDD");
+//            LOG("%f", truePeak);
+//            LOG("%f", 20 * log10(truePeak));
             std::memcpy(inPeaks[channel], &truePeak, sizeof(float));
 //            if (truePeak > 1.0f) {
 //                float peakReduction = 1.0f / truePeak;
@@ -238,54 +238,87 @@ public:
             
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
-            
+            float energyDelta = 1e-6f;
+            LOG("VVV");
+            LOG("%d", *prevOverThreshold);
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
-                    float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
+                    energyDelta = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
 //                    float reductionCurve = 1.0f - pow((excessEnergy / targetEnergy), 1.0f / mSmooth);
                     
-                    float logExcessEnergy = log10(1.0f + excessEnergy / targetEnergy);
-                    float reductionCurve = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
+                    float logExcessEnergy = log10(1.0f + energyDelta / targetEnergy);
+                    reduction = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
 
-                    reduction = std::max(reductionCurve, 1e-6f);
-                    reduction = reductionCurve;
-                    
-                    reduction = currReduction - attack * (1.0f - reduction);
+//                    reduction = std::max(reductionCurve, 1e-6f);
+//                    reduction = reductionCurve;
+                    if (reduction > currReduction) {
+                        reduction = currReduction - attack * reduction / currReduction * (1.0f - reduction);
+                    } else {
+                        reduction = currReduction - attack * (1.0f - reduction);
+                    }
                 } else {
-                    float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
-//                    float reductionCurve = 1.0f - pow(missingEnergy / targetEnergy, 1.0f / mSmooth);
+                    *prevOverThreshold = false;
+                    energyDelta = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
+//                    reduction = 1.0f - pow(energyDelta / targetEnergy, 1.0f / mSmooth);
                     
-                    float logExcessEnergy = log10(1.0f + missingEnergy / targetEnergy);
-                    float reductionCurve = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
-
-                    reduction = std::max(reductionCurve, 1e-6f);
-                    reduction = currReduction + release * (1.0f - reduction);
+                    float logExcessEnergy = log10(1.0f + energyDelta / targetEnergy);
+                    reduction = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
+                    LOG("TTT");
+                    LOG("%f", energyDelta);
+                    LOG("%f", reduction);
+                    reduction = std::min(reduction, 1.0f);
+//                    reduction = reductionCurve;
+                    if (reduction < currReduction) {
+                        reduction = currReduction + release * currReduction / reduction * (1.0f - reduction);
+                    } else {
+                        reduction = currReduction + release * (1.0f - reduction);
+                    }
+//                    reduction = currReduction + release * (1.0f - reduction);
+                    LOG("%f", currReduction);
+                    LOG("%f", reduction);
+                    
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
-                    float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
+                    *prevOverThreshold = true;
+                    energyDelta = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
 //                    float reductionCurve = 1.0f - pow(excessEnergy / targetEnergy, 1.0f / mSmooth);
                     
-                    float logExcessEnergy = log10(1.0f + excessEnergy / targetEnergy);
-                    float reductionCurve = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
+                    float logExcessEnergy = log10(1.0f + energyDelta / targetEnergy);
+                    reduction = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
 
-                    reduction = std::max(reductionCurve, 1e-6f);
-                    reduction = reductionCurve;
-
-                    reduction = currReduction - attack * (1.0f - reduction);
+//                    reduction = std::max(reductionCurve, 1e-6f);
+//                    reduction = reductionCurve;
+                    if (reduction > currReduction) {
+                        reduction = currReduction - attack * currReduction / reduction * (1.0f - reduction);
+                    } else {
+                        reduction = currReduction - attack * (1.0f - reduction);
+                    }
+                    
                 } else {
                     *prevOverThreshold = false;
-                    float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
-//                    float reductionCurve = 1.0f - pow(missingEnergy / targetEnergy, 1.0f / mSmooth);
+                    energyDelta = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
+//                    reduction = 1.0f - pow(energyDelta / targetEnergy, 1.0f / mSmooth);
                     
-                    float logExcessEnergy = log10(1.0f + missingEnergy / targetEnergy);
-                    float reductionCurve = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
+                    float logExcessEnergy = log10(1.0f + energyDelta / targetEnergy);
+                    reduction = 1.0f - pow(logExcessEnergy, 1.0f / mSmooth);
                     
-                    reduction = std::max(reductionCurve, 1e-6f);
-                    reduction = currReduction + release * (1.0f - reduction);
+                    reduction = std::min(reduction, 1.0f);
+//                    reduction = reductionCurve;
+                    LOG("SSS");
+                    LOG("%f", reduction);
+                    if (reduction > currReduction) {
+                        reduction = currReduction + release * currReduction / reduction * (1.0f - reduction);
+                    } else {
+                        reduction = currReduction + release * (1.0f - reduction);
+                    }
+//                    reduction = currReduction + release * (1.0f - reduction);
+                    
+                    LOG("%f", reduction);
                 }
             }
+            
             reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
             
             // Add to Gain Reduction
