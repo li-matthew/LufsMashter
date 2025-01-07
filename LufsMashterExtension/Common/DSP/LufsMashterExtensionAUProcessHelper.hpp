@@ -89,9 +89,9 @@ public:
 //            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
-            std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 0.0f);
-            std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 0.0f);
-            std::fill(mInPeaks[channel], mInPeaks[channel] + 1024, 0.0f);
+            std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 1e-6f);
+            std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 1e-6f);
+            std::fill(mInPeaks[channel], mInPeaks[channel] + 1024, 1e-6f);
 //            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
     }

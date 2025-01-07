@@ -13,7 +13,8 @@ var lineColors: [SIMD4<Float>] = [
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
     SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
-    SIMD4(1.0, 1.0, 1.0, 1.0)
+    SIMD4(1.0, 1.0, 1.0, 1.0),
+    SIMD4(1.0, 0.0, 1.0, 0.5)
 ]
 
 var horGrid: [Float] = [
@@ -191,7 +192,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
         
             renderEncoder?.setVertexBuffer(inPeakVertexBuffer, offset: 0, index: 0)
-            renderEncoder?.setFragmentBytes(&lineColors[0],
+            renderEncoder?.setFragmentBytes(&lineColors[5],
                                                         length: MemoryLayout<SIMD4<Float>>.stride,
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
