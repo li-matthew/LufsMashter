@@ -250,7 +250,7 @@ public:
 
                     reduction = std::max(reductionCurve, 1e-6f);
                     reduction = reductionCurve;
-
+                    
                     reduction = currReduction - attack * (1.0f - reduction);
                 } else {
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);

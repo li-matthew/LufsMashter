@@ -1,4 +1,5 @@
 Lookahead
 Latency
-Meters
 Labels
+
+compare frames incoming energy with to be removed energy
