@@ -19,6 +19,7 @@ var lineColors: [SIMD4<Float>] = [
 var horGrid: [Float] = [
      0.125,
      0.25,
+     0.375,
      0.5,
      0.625,
      0.75,

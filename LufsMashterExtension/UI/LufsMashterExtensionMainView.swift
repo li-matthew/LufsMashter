@@ -49,7 +49,6 @@ struct LufsMashterExtensionMainView: View {
                 
             }
             HStack {
-//                Spacer()
                 ParameterSlider(param: parameterTree.global.target, title: "LUFS Target")
                 Spacer()
                 ParameterSlider(param: parameterTree.global.attack, title: "Attack")
@@ -57,8 +56,7 @@ struct LufsMashterExtensionMainView: View {
                 ParameterSlider(param: parameterTree.global.release, title: "Release")
                 Spacer()
                 ParameterSlider(param: parameterTree.global.smooth, title: "Smooth")
-//                Spacer()
             }.frame(width: 500, height: 100)
-        }.border(Color.red)
+        }.padding()
     }
 }
