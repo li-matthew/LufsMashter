@@ -39,6 +39,8 @@ struct LufsMashterExtensionMainView: View {
                     Spacer()
                     DataView(param: parameterTree.global.target, val: $meterVals.vals[1], title: "OUT", units: "LUFS")
                     Spacer()
+                    DataView(param: parameterTree.global.target, val: $meterVals.vals[1], title: "DELTA", units: "LUFS")
+                    Spacer()
                 }
             }
             .onAppear {

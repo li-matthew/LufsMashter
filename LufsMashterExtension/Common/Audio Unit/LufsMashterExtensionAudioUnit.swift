@@ -46,10 +46,32 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return []
         }
         let result: [[Float]] = buffer.map { row in
-            row.map { (max(-60.0, min(20 * log10($0.floatValue), 0.0)) + 60) / 60
+            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
             }
         }
         
+        return result
+    }
+    
+    public func getOutLuffers() -> [[Float]] {
+        guard let buffer = adapter!.getOutLuffers() else {
+            return []
+        }
+        let result: [[Float]] = buffer.map { row in
+            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
+            }
+        }
+        return result
+    }
+    
+    public func getInPeaks() -> [[Float]] {
+        guard let buffer = adapter!.getInPeaks() else {
+            return []
+        }
+        let result: [[Float]] = buffer.map { row in
+            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 6.0)) + 60) / 66
+            }
+        }
         return result
     }
     
@@ -61,22 +83,11 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         return result
     }
     
-    public func getOutLuffers() -> [[Float]] {
-        guard let buffer = adapter!.getOutLuffers() else {
-            return []
-        }
-        let result: [[Float]] = buffer.map { row in
-            row.map { (max(-60.0, min(20 * log10($0.floatValue), 0.0)) + 60) / 60
-            }
-        }
-        return result
-    }
-    
     public func getCurrIn() -> Float {
         guard let val = adapter!.getCurrIn() else {
             return 1e-6
         }
-        let result: Float = (max(-60.0, min(20 * log10(val.floatValue), 0.0)) + 60) / 60
+        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60/* val.floatValue*/
         
         return result
     }
@@ -85,7 +96,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrOut() else {
             return 1e-6
         }
-        let result: Float = (max(-60.0, min(20 * log10(val.floatValue), 0.0)) + 60) / 60
+        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60
         
         return result
     }

@@ -14,7 +14,7 @@ class ObservableBuffers: ObservableObject {
     @Published var buffers: [[[Float]]]
     
     init() {
-        buffers = Array(repeating: Array(repeating: Array(repeating: 0.0, count: 1024), count: 2), count: 3)
+        buffers = Array(repeating: Array(repeating: Array(repeating: 0.0, count: 1024), count: 2), count: 4)
     }
 }
 
@@ -83,7 +83,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     
     public func updateVizBuffers() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffers = [audioUnit.getInLuffers(), audioUnit.getOutLuffers(), [audioUnit.getGainReduction()]]
+        let buffers = [audioUnit.getInLuffers(), audioUnit.getOutLuffers(), [audioUnit.getGainReduction()], audioUnit.getInPeaks()]
         bufferSubject.send(buffers)
         vizBuffers.buffers = buffers
     }

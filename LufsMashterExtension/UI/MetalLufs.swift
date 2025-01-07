@@ -31,11 +31,13 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     let vizPipelineState: MTLRenderPipelineState!
     let gridPipelineState: MTLRenderPipelineState!
     
-    var vizValues: [[[Float]]] = Array(repeating: [[]], count: 3)
+    var vizValues: [[[Float]]] = Array(repeating: [[]], count: 4)
     
     var inVertexBuffer: MTLBuffer!
     var outVertexBuffer: MTLBuffer!
     var redVertexBuffer: MTLBuffer!
+    var inPeakVertexBuffer: MTLBuffer!
+    
     var horGridBuffer: MTLBuffer!
     var verGridBuffer: MTLBuffer!
     var targetBuffer: MTLBuffer!
@@ -44,8 +46,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     var length: UInt32 = 1024
     
     private var cancellables: Set<AnyCancellable> = []
-    
-//    private let overLayer: OverLayer!
     
     var metalView: ObservableBuffers? {
         didSet {
@@ -104,7 +104,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         gridPipelineState = try! device!.makeRenderPipelineState(descriptor: gridPipelineStateDescriptor)
         
         super.init(frame: frameRect, device: device)
-//        self.layer?.addSublayer(overLayer)
         
         horGridBuffer = device!.makeBuffer(bytes: horGrid, length: horGrid.count * MemoryLayout<Float>.size, options: [])
         
@@ -124,10 +123,12 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         let inVertexData: [[Float]] = vizValues[0]
         let outVertexData: [[Float]] = vizValues[1]
         let redVertexData: [[Float]] = vizValues[2]
+        let inPeakVertexData: [[Float]] = vizValues[3]
         
         inVertexBuffer = device!.makeBuffer(bytes: inVertexData[0], length: inVertexData[0].count * MemoryLayout<Float>.size, options: [])
         outVertexBuffer = device!.makeBuffer(bytes: outVertexData[0], length: outVertexData[0].count * MemoryLayout<Float>.size, options: [])
         redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        inPeakVertexBuffer = device!.makeBuffer(bytes: inPeakVertexData[0], length: inPeakVertexData[0].count * MemoryLayout<Float>.size, options: [])
     }
     
     func updateTarget() {
@@ -143,8 +144,8 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                   let renderPassDescriptor = view.currentRenderPassDescriptor,
                   let vizPipelineState = vizPipelineState,
                   let gridPipelineState = gridPipelineState,
-                  let commandQueue = commandQueue,
-                  let inVertexBuffer = inVertexBuffer
+                  let commandQueue = commandQueue
+//                  let inVertexBuffer = inVertexBuffer
         else {
                 return
             }
@@ -185,6 +186,12 @@ public class MetalLufs: MTKView, MTKViewDelegate {
             
             renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[2],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+        
+            renderEncoder?.setVertexBuffer(inPeakVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[0],
                                                         length: MemoryLayout<SIMD4<Float>>.stride,
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)

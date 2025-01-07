@@ -12,6 +12,7 @@
 - (instancetype)initWithProcessHelper:(AUProcessHelper*)existingProcessHelper;
 - (NSArray<NSArray<NSNumber*>*>*)getInLuffers;
 - (NSArray<NSArray<NSNumber*>*>*)getOutLuffers;
+- (NSArray<NSArray<NSNumber*>*>*)getInPeaks;
 - (NSArray<NSNumber*>*)getGainReduction;
 - (NSNumber*)getCurrIn;
 - (NSNumber*)getCurrOut;

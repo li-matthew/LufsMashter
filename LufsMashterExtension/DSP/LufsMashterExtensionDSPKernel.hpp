@@ -132,16 +132,14 @@ public:
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> lookAhead, float* gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(float* currRed, float* currIn, float* currOut, bool* prevOverThreshold, std::span<float*> inPeaks, float* gainReduction, std::span<float*>inLufsFrame, std::span<float*>outLufsFrame, std::span<float*> inLuffers, std::span<float*> outLuffers,  std::span<float const*> inputBuffers, std::span<float *> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
         startTime = std::chrono::high_resolution_clock::now();
+        
         /*
          Note: For an Audio Unit with 'n' input channels to 'n' output channels, remove the assert below and
          modify the check in [LufsMashterExtensionAudioUnit allocateRenderResourcesAndReturnError]
          */
-        
-        std::vector<float*> tempBuffers;
-        tempBuffers.resize(2);
         
         assert(inputBuffers.size() == outputBuffers.size());
         
@@ -165,12 +163,11 @@ public:
          nullptr);	// currentMeasureDownbeatPosition
          }
          */
-//        float targetVal = pow(10.0, mTarget / 20.0);
-//        float targetDb = 20 * log10(mTarget);
-//        float targetGain = pow(10.0, targetDb / 20.0);
+        std::vector<float*> tempBuffers;
+        tempBuffers.resize(2);
+        
         float target =  pow(10, ((mTarget * 60) - 60) / 20);
-        LOG("DDD");
-        LOG("%f", target);
+
         float targetEnergy = lufsWindow * target * target;
         
         float attack = 1.0 / (44.1 * mAttack);
@@ -179,7 +176,7 @@ public:
         float reds[] = {1.0, 1.0};
         float finalReduction = 1.0;
         
-        std::copy_backward(gainReduction, gainReduction + (luffersLength - 1), gainReduction + luffersLength);
+        std::copy_backward(gainReduction, gainReduction + (vizLength - 1), gainReduction + vizLength);
         
         // Perform per sample dsp on the incoming float in before assigning it to out
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
@@ -205,8 +202,32 @@ public:
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
             //            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
-            std::copy_backward(inLuffers[channel], inLuffers[channel] + (luffersLength - 1), inLuffers[channel] + luffersLength);
-            std::copy_backward(outLuffers[channel], outLuffers[channel] + (luffersLength - 1), outLuffers[channel] + luffersLength);
+            std::copy_backward(inLuffers[channel], inLuffers[channel] + (vizLength - 1), inLuffers[channel] + vizLength);
+            std::copy_backward(outLuffers[channel], outLuffers[channel] + (vizLength - 1), outLuffers[channel] + vizLength);
+            
+            std::copy_backward(inPeaks[channel], inPeaks[channel] + (vizLength - 1), inPeaks[channel] + vizLength);
+            
+            const int filterSize = 5;
+            float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
+                
+            // Output buffer for the filtered signal
+            float filteredBuffer[frameCount];
+                
+            // Perform convolution to simulate the reconstruction (apply the FIR filter)
+            vDSP_conv(tempBuffers[channel], 1, filter, 1, filteredBuffer, 1, frameCount, filterSize);
+            
+            // Find the maximum value in the filtered signal (True Peak)
+            float truePeak = 0.0f;
+            vDSP_maxmgv(filteredBuffer, 1, &truePeak, frameCount);
+            
+            LOG("DDD");
+            LOG("%f", truePeak);
+            LOG("%f", 20 * log10(truePeak));
+            std::memcpy(inPeaks[channel], &truePeak, sizeof(float));
+//            if (truePeak > 1.0f) {
+//                float peakReduction = 1.0f / truePeak;
+//                vDSP_vsmul(tempBuffers[channel], 1, &peakReduction, tempBuffers[channel], 1, frameCount);
+//            }
             
             // Section Energies
             float energy;
@@ -267,7 +288,7 @@ public:
             
             // Add to Gain Reduction
             reds[channel] = reduction;
-            
+
             // Add to Out Luffers
             
             std::memcpy(inLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
@@ -299,6 +320,14 @@ public:
                                     outputBuffers[channel], 1,
                                     tempBuffers[channel], 1,
                                     frameCount);
+//            float truePeak;
+//            vDSP_maxmgv(tempBuffers[channel], 1, &truePeak, frameCount);
+//            LOG("DDD");
+//            LOG("%f", truePeak);
+//            if (truePeak > 1.0f) {
+//                float peakReduction = 1.0f / truePeak;
+//                vDSP_vsmul(tempBuffers[channel], 1, &peakReduction, tempBuffers[channel], 1, frameCount);
+//            }
             
             std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
@@ -310,7 +339,7 @@ public:
             // Compute elapsed time
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
             double latencyInMicroseconds = duration.count() / 1000.0;
-            LOG("%f ms", latencyInMicroseconds);
+//            LOG("%f ms", latencyInMicroseconds);
         }
     }
     
@@ -337,7 +366,7 @@ public:
     
 //    const int lufsWindow = 17640;
     const int lufsWindow = 132300;
-    const int luffersLength = 1024;
+    const int vizLength = 1024;
     double mSampleRate = 44100.0;
     
     double mTarget = 1.0;

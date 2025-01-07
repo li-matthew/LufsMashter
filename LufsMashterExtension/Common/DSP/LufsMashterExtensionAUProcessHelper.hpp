@@ -40,12 +40,16 @@ public:
         return mInLuffers;
     }
     
-    const float* getGainReduction() const {
-        return mGainReduction;
-    }
-    
     const std::vector<float*>& getOutLuffers() const {
         return mOutLuffers;
+    }
+    
+    const std::vector<float*>& getInPeaks() const {
+        return mInPeaks;
+    }
+    
+    const float* getGainReduction() const {
+        return mGainReduction;
     }
     
     const float& getCurrIn() const {
@@ -68,8 +72,9 @@ public:
         mOutLufsFrame.resize(inputChannelCount);
         mInLuffers.resize(inputChannelCount);
         mOutLuffers.resize(inputChannelCount);
+        mInPeaks.resize(inputChannelCount);
         
-        mLookAhead.resize(inputChannelCount);
+//        mLookAhead.resize(inputChannelCount);
         
 //        mGainReduction.resize(1);
         mGainReduction = new float[1024];
@@ -80,12 +85,14 @@ public:
             mOutLufsFrame[channel] = new float[132300];
             mInLuffers[channel] = new float[1024];
             mOutLuffers[channel] = new float[1024];
-            mLookAhead[channel] = new float[441];
+            mInPeaks[channel] = new float[1024];
+//            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
             std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 0.0f);
             std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 0.0f);
-            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
+            std::fill(mInPeaks[channel], mInPeaks[channel] + 1024, 0.0f);
+//            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
     }
 
@@ -108,7 +115,7 @@ public:
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
 
-            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mLookAhead, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mInPeaks, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -208,12 +215,14 @@ private:
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
     
-    std::vector<float*> mLookAhead;
+//    std::vector<float*> mLookAhead;
     
     std::vector<float*> mInLufsFrame;
     std::vector<float*> mOutLufsFrame;// samples for calculating lufs
     std::vector<float*> mInLuffers; // buffer of lufs
     std::vector<float*> mOutLuffers;
+    std::vector<float*> mInPeaks;
+    std::vector<float*> mOutPeaks;
     float* mGainReduction;
     
     float currIn = 1e-6;
