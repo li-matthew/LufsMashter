@@ -168,7 +168,10 @@ public:
 //        float targetVal = pow(10.0, mTarget / 20.0);
 //        float targetDb = 20 * log10(mTarget);
 //        float targetGain = pow(10.0, targetDb / 20.0);
-        float targetEnergy = lufsWindow * mTarget * mTarget;
+        float target =  pow(10, ((mTarget * 60) - 60) / 20);
+        LOG("DDD");
+        LOG("%f", target);
+        float targetEnergy = lufsWindow * target * target;
         
         float attack = 1.0 / (44.1 * mAttack);
         float release = 1.0 / (44.1 * mRelease);
@@ -215,16 +218,14 @@ public:
             float reduction = 1.0;
             if (currEnergy <= 0.0f) currEnergy = 1e-6f;
             
-            LOG("OOO");
             if (!*prevOverThreshold) {
                 if ((currEnergy + energy) > targetEnergy) {
                     *prevOverThreshold = true;
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
-                    int mult = std::max(excessEnergy / targetEnergy, 1.0f);
     
                     float reductionCurve = 1.0f - pow((excessEnergy / targetEnergy), 1.0f / mSmooth);
-//                    float reductionCurve = (1 - (excessEnergy / targetEnergy) / mSmooth);
-//                    reduction = std::max(reductionCurve, 1e-6f);
+
+                    reduction = std::max(reductionCurve, 1e-6f);
                     reduction = reductionCurve;
                     
                     if (reduction > currReduction) {
@@ -233,26 +234,19 @@ public:
                         reduction = currReduction - attack * (1.0f - reduction);
                         
                     }
-                    
-                    LOG("%d", mult);
-                    
                 } else {
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
                     float reductionCurve = 1.0f - pow(missingEnergy / targetEnergy, 1.0f / mSmooth);
-//                    float reductionCurve = (1 - (missingEnergy / targetEnergy) / mSmooth);
+
                     reduction = std::max(reductionCurve, 1e-6f);
-                    
-//                    LOG("%d", mult);
                     reduction = currReduction + release * (1.0f - reduction);
                 }
             } else {
                 if ((energy + currEnergy) > targetEnergy) {
-
                     float excessEnergy = std::max(currEnergy + (energy - targetEnergy), 1e-6f);
-                    int mult = std::max(excessEnergy / targetEnergy, 1.0f);
                     float reductionCurve = 1.0f - pow(excessEnergy / targetEnergy, 1.0f / mSmooth);
-//                    float reductionCurve = (1 - (excessEnergy / targetEnergy) / mSmooth);
-//                    reduction = std::max(reductionCurve, 1e-6f);
+
+                    reduction = std::max(reductionCurve, 1e-6f);
                     reduction = reductionCurve;
                     
                     if (reduction > currReduction) {
@@ -260,26 +254,19 @@ public:
                     } else {
                         reduction = currReduction - attack * (1.0f - reduction);
                     }
-                    LOG("%d", mult);
                 } else {
                     *prevOverThreshold = false;
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
                     float reductionCurve = 1.0f - pow(missingEnergy / targetEnergy, 1.0f / mSmooth);
-//                    float reductionCurve = (1 - (missingEnergy / targetEnergy) / mSmooth);
-                    
                     
                     reduction = std::max(reductionCurve, 1e-6f);
-                    LOG("%f", reduction);
                     reduction = currReduction + release * (1.0f - reduction);
                 }
             }
-            LOG("%d", *prevOverThreshold);
-            LOG("%f",reduction);
             reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
             
             // Add to Gain Reduction
             reds[channel] = reduction;
-//            std::memcpy(gainReduction[channel], &reduction, sizeof(float));
             
             // Add to Out Luffers
             
@@ -288,18 +275,16 @@ public:
             std::memcpy(inLuffers[channel], &inRms, sizeof(float));
             
             *currIn = inRms;
-//            *currRed = *gainReduction[channel];
         }
         
         finalReduction = std::min(reds[0], reds[1]);
         std::memcpy(gainReduction, &finalReduction, sizeof(float));
         *currRed = *gainReduction;
-//        if (2 * (*gainReduction - currReduction)) >
+
         float step = 2 * (*gainReduction - currReduction) / frameCount;
         
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             float outRms;
-//            float step = 2 * (*gainReduction - currReduction) / frameCount;
             
             
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {

@@ -46,7 +46,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return []
         }
         let result: [[Float]] = buffer.map { row in
-            row.map { $0.floatValue
+            row.map { (max(-60.0, min(20 * log10($0.floatValue), 0.0)) + 60) / 60
             }
         }
         
@@ -66,7 +66,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return []
         }
         let result: [[Float]] = buffer.map { row in
-            row.map { $0.floatValue
+            row.map { (max(-60.0, min(20 * log10($0.floatValue), 0.0)) + 60) / 60
             }
         }
         return result
@@ -76,7 +76,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrIn() else {
             return 1e-6
         }
-        let result: Float = val.floatValue
+        let result: Float = (max(-60.0, min(20 * log10(val.floatValue), 0.0)) + 60) / 60
         
         return result
     }
@@ -85,7 +85,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrOut() else {
             return 1e-6
         }
-        let result: Float = val.floatValue
+        let result: Float = (max(-60.0, min(20 * log10(val.floatValue), 0.0)) + 60) / 60
         
         return result
     }
