@@ -248,13 +248,8 @@ public:
 
                     reduction = std::max(reductionCurve, 1e-6f);
                     reduction = reductionCurve;
-                    
-                    if (reduction > currReduction) {
-                        reduction = currReduction - release * (1.0f - reduction);
-                    } else {
-                        reduction = currReduction - attack * (1.0f - reduction);
-                        
-                    }
+
+                    reduction = currReduction - attack * (1.0f - reduction);
                 } else {
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
                     float reductionCurve = 1.0f - pow(missingEnergy / targetEnergy, 1.0f / mSmooth);
@@ -269,12 +264,8 @@ public:
 
                     reduction = std::max(reductionCurve, 1e-6f);
                     reduction = reductionCurve;
-                    
-                    if (reduction > currReduction) {
-                        reduction = currReduction - release * (1.0f - reduction);
-                    } else {
-                        reduction = currReduction - attack * (1.0f - reduction);
-                    }
+
+                    reduction = currReduction - attack * (1.0f - reduction);
                 } else {
                     *prevOverThreshold = false;
                     float missingEnergy = std::max(targetEnergy - (currEnergy + energy), 1e-6f);
