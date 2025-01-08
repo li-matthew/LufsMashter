@@ -23,7 +23,7 @@ struct ParameterSlider: View {
             if (param.displayName == "target") {
                 Text(String(format: "%.2f LUFS", (60 * (param.value)) - 60))
             } else if (param.displayName == "attack" || param.displayName == "release") {
-                Text(String(format: "%.2f ms", param.value))
+                Text(String(format: "%.2f", param.value))
             } else {
                 Text(String(format: "%.2f", param.value))
             }

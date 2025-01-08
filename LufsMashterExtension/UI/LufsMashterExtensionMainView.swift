@@ -58,6 +58,8 @@ struct LufsMashterExtensionMainView: View {
                 ParameterSlider(param: parameterTree.global.release, title: "Release")
                 Spacer()
                 ParameterSlider(param: parameterTree.global.smooth, title: "Smooth")
+                Spacer()
+                ParameterSlider(param: parameterTree.global.knee, title: "Knee")
             }.frame(width: 500, height: 100)
         }.padding()
     }

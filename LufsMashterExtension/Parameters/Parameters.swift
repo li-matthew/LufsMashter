@@ -24,7 +24,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             name: "attack",
             units: .generic,
             valueRange: 1.0...500.0,
-            defaultValue: 10.0
+            defaultValue: 5.0
         )
         ParameterSpec(
             address: .release,
@@ -32,23 +32,23 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             name: "release",
             units: .generic,
             valueRange: 1.0...500.0,
-            defaultValue: 100.0
+            defaultValue: 10.0
         )
         ParameterSpec(
             address: .smooth,
             identifier: "smooth",
             name: "smooth",
             units: .generic,
-            valueRange: 0.1...2.0,
-            defaultValue: 0.9
+            valueRange: 0.1...10.0,
+            defaultValue: 10.0
         )
         ParameterSpec(
             address: .knee,
             identifier: "knee",
             name: "knee",
             units: .generic,
-            valueRange: 1.0...1000.0,
-            defaultValue: 12.0
+            valueRange: 1.0...25.0,
+            defaultValue: 15.0
         )
     }
 }
