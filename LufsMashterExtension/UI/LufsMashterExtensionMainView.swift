@@ -77,12 +77,14 @@ struct LufsMashterExtensionMainView: View {
                     .padding()
                     .background(isRecording.val ? Color.red : Color.blue)
                     .opacity(isRecording.val ? 0.5 : 1.0)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                isRecording.update(state: !isRecording.val)
-                            }
-                    )
+                    .onTapGesture {
+                        //                    .simultaneousGesture(
+                        //                        DragGesture(minimumDistance: 0)
+                        //                            .onChanged { _ in
+                        isRecording.update(state: !isRecording.val)
+                        //                            }
+                        //                    )
+                    }
             }.frame(width: 500, height: 100)
         }.padding()
     }

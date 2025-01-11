@@ -136,8 +136,13 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     public func updateIsReset(state: Bool) {
 //        DispatchQueue.global(qos: .userInitiated).async {
             guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        if ((audioUnit.getIsReset() == false) && state) {
+            audioUnit.setIsReset(reset: false);
+        } else {
             audioUnit.setIsReset(reset: state);
-            isReset.update(state: audioUnit.getIsReset());
+        }
+            
+//            isReset.update(state: audioUnit.getIsReset());
     }
     
     deinit {

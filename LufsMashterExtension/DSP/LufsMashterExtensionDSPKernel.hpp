@@ -292,7 +292,7 @@ public:
         finalIn = (ins[0] + ins[1]) / 2;
         std::memcpy(inLuffers, &finalIn, sizeof(float));
         *currIn = *inLuffers;
-        
+        LOG("RESET%d", *isReset);
         if (*isRecording) {
             finalAverage = (averages[0] + averages[1]) / 2;
             finalReduction = std::min(reds[0], reds[1]);
@@ -305,8 +305,11 @@ public:
             *currAverage = *recordAverage;
         } else {
 //            if (*isReset) {
+//                LOG("SETTING");
+//                
 //                finalReduction = gainReduction[1] + (1.0f - pow(1.0f - gainReduction[1], 3)) / 2;
 //                finalReduction = (float)std::clamp(finalReduction, 1e-6f, 1.0f);
+//                LOG("%f", finalReduction);
 //                if (finalReduction > 0.9) {
 //                    finalReduction = 1.0f;
 //                    *isReset = false;
