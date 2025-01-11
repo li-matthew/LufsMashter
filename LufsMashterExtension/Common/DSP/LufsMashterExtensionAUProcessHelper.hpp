@@ -36,11 +36,11 @@ public:
     {
     }
 
-    const std::vector<float*>& getInLuffers() const {
+    const float* getInLuffers() const {
         return mInLuffers;
     }
     
-    const std::vector<float*>& getOutLuffers() const {
+    const float* getOutLuffers() const {
         return mOutLuffers;
     }
     
@@ -50,6 +50,10 @@ public:
     
     const float* getGainReduction() const {
         return mGainReduction;
+    }
+    
+    const float* getRecordAverage() const {
+        return mRecordAverage;
     }
     
     const float& getCurrIn() const {
@@ -63,6 +67,22 @@ public:
     const float& getCurrRed() const {
         return currRed;
     }
+    
+    void setIsRecording(bool recording) {
+        mIsRecording = recording;
+    }
+    
+    const bool& getIsRecording() const {
+        return mIsRecording;
+    }
+    
+    void setIsReset(bool reset) {
+        mIsReset = reset;
+    }
+    
+    const bool& getIsReset() const {
+        return mIsReset;
+    }
 
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
     {
@@ -70,27 +90,26 @@ public:
         mOutputBuffers.resize(outputChannelCount);
         mInLufsFrame.resize(inputChannelCount);
         mOutLufsFrame.resize(inputChannelCount);
-        mInLuffers.resize(inputChannelCount);
-        mOutLuffers.resize(inputChannelCount);
+//        mInLuffers.resize(inputChannelCount);
+//        mOutLuffers.resize(inputChannelCount);
         mInPeaks.resize(inputChannelCount);
         
-//        mLookAhead.resize(inputChannelCount);
-        
-//        mGainReduction.resize(1);
         mGainReduction = new float[1024];
+        mRecordAverage = new float[1024];
         std::fill(mGainReduction, mGainReduction + 1024, 1.0f);
+        std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
+        mInLuffers = new float[1024];
+        mOutLuffers = new float[1024];
+        std::fill(mInLuffers, mInLuffers + 1024, 1e-6f);
+        std::fill(mOutLuffers, mOutLuffers + 1024, 1e-6f);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mInLufsFrame[channel] = new float[132300];
             mOutLufsFrame[channel] = new float[132300];
-            mInLuffers[channel] = new float[1024];
-            mOutLuffers[channel] = new float[1024];
             mInPeaks[channel] = new float[1024];
 //            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
-            std::fill(mInLuffers[channel], mInLuffers[channel] + 1024, 1e-6f);
-            std::fill(mOutLuffers[channel], mOutLuffers[channel] + 1024, 1e-6f);
             std::fill(mInPeaks[channel], mInPeaks[channel] + 1024, 1e-6f);
 //            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
@@ -107,6 +126,7 @@ public:
         AURenderEvent const *nextEvent = events; // events is a linked list, at the beginning, the nextEvent is the first event
 
         auto callProcess = [this] (AudioBufferList* inBufferListPtr, AudioBufferList* outBufferListPtr, AUEventSampleTime now, AUAudioFrameCount frameCount, AUAudioFrameCount const frameOffset) {
+//            mIsRecording = mIsRecording;
             for (int channel = 0; channel < inBufferListPtr->mNumberBuffers; ++channel) {
                 mInputBuffers[channel] = (const float*)inBufferListPtr->mBuffers[channel].mData  + frameOffset;
             }
@@ -114,8 +134,20 @@ public:
             for (int channel = 0; channel < outBufferListPtr->mNumberBuffers; ++channel) {
                 mOutputBuffers[channel] = (float*)outBufferListPtr->mBuffers[channel].mData + frameOffset;
             }
+            
+            if (!prevRecording && mIsRecording) {
+//                std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
+                currAverage = 0.0f;
+                currRed = 1.0f;
+                mRecordCount = 0.0f;
+            }
+            else if (prevRecording && !mIsRecording) {
+//                std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
+//                currAverage = 0.0f;
+                mRecordCount = 0.0f;
+            }
 
-            mKernel.process(&currRed, &currIn, &currOut, &prevOverThreshold, mInPeaks, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&mIsReset, mRecordAverage, &mRecordCount, &mIsRecording, &currAverage, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -219,16 +251,22 @@ private:
     
     std::vector<float*> mInLufsFrame;
     std::vector<float*> mOutLufsFrame;// samples for calculating lufs
-    std::vector<float*> mInLuffers; // buffer of lufs
-    std::vector<float*> mOutLuffers;
+    float* mInLuffers; // buffer of lufs
+    float* mOutLuffers;
     std::vector<float*> mInPeaks;
     std::vector<float*> mOutPeaks;
     float* mGainReduction;
+    float* mRecordAverage;
+    
+    float mRecordCount = 0.0f;
     
     float currIn = 1e-6;
     float currOut = 1e-6;
     float currRed = 1.0;
+    float currAverage = 0.0;
     
-    bool prevOverThreshold = false;
+    bool mIsRecording = false;
+    bool mIsReset = false;
+    bool prevRecording = false;
     BufferedInputBus& mBufferedInputBus;
 };

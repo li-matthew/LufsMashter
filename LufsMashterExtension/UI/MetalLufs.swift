@@ -14,7 +14,8 @@ var lineColors: [SIMD4<Float>] = [
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
     SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
     SIMD4(1.0, 1.0, 1.0, 1.0),
-    SIMD4(1.0, 0.0, 1.0, 0.5)
+    SIMD4(1.0, 0.0, 1.0, 0.5),
+    SIMD4(1.0, 0.0, 0.0, 1.0)
 ]
 
 var horGrid: [Float] = [
@@ -32,12 +33,13 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     let vizPipelineState: MTLRenderPipelineState!
     let gridPipelineState: MTLRenderPipelineState!
     
-    var vizValues: [[[Float]]] = Array(repeating: [[]], count: 4)
+    var vizValues: [[[Float]]] = Array(repeating: [[]], count: 5)
     
     var inVertexBuffer: MTLBuffer!
     var outVertexBuffer: MTLBuffer!
     var redVertexBuffer: MTLBuffer!
     var inPeakVertexBuffer: MTLBuffer!
+    var recordAverageVertexBuffer: MTLBuffer!
     
     var horGridBuffer: MTLBuffer!
     var verGridBuffer: MTLBuffer!
@@ -62,9 +64,11 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     }
     
     var target: Float
+    var isRecording: Bool
     
-    init(frame frameRect: CGRect, target: ObservableAUParameter) {
+    init(frame frameRect: CGRect, target: ObservableAUParameter, isRecording: ObservableState) {
         self.target = target.value
+        self.isRecording = isRecording.val
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()
@@ -123,13 +127,31 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     func updateVertexBuffers() {
         let inVertexData: [[Float]] = vizValues[0]
         let outVertexData: [[Float]] = vizValues[1]
-        let redVertexData: [[Float]] = vizValues[2]
         let inPeakVertexData: [[Float]] = vizValues[3]
+//        if (self.isRecording) {
+        let redVertexData: [[Float]] = vizValues[2]
+        let recordAverageVertexData: [[Float]] = vizValues[4]
+            
+//        }
+        
+//        for i in 0..<redVertexData.count {
+//            let value = redVertexData[i]
+//            if value == 0.0 || value == 1.0 {
+//                vertices.append(Float.nan) // Insert NaN for invalid points
+//            } else {
+//                vertices.append(value)
+//            }
+//        }
+//        let redVertexData: [[Float]] = vizValues[2]
+//        let recordAverageVertexData: [[Float]] = vizValues[4]
         
         inVertexBuffer = device!.makeBuffer(bytes: inVertexData[0], length: inVertexData[0].count * MemoryLayout<Float>.size, options: [])
         outVertexBuffer = device!.makeBuffer(bytes: outVertexData[0], length: outVertexData[0].count * MemoryLayout<Float>.size, options: [])
-        redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        
         inPeakVertexBuffer = device!.makeBuffer(bytes: inPeakVertexData[0], length: inPeakVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        recordAverageVertexBuffer  = device!.makeBuffer(bytes: recordAverageVertexData[0], length: recordAverageVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        
     }
     
     func updateTarget() {
@@ -146,7 +168,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
                   let vizPipelineState = vizPipelineState,
                   let gridPipelineState = gridPipelineState,
                   let commandQueue = commandQueue
-//                  let inVertexBuffer = inVertexBuffer
         else {
                 return
             }
@@ -193,6 +214,11 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         
             renderEncoder?.setVertexBuffer(inPeakVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[5],
+                                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                                        index: 1)
+            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+            renderEncoder?.setVertexBuffer(recordAverageVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setFragmentBytes(&lineColors[6],
                                                         length: MemoryLayout<SIMD4<Float>>.stride,
                                                         index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)

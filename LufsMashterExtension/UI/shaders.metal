@@ -13,15 +13,18 @@ constant uint bufferLength [[function_constant(0)]];
 struct VertexOut {
     float4 position [[position]];
     float4 color;
+    bool isValid;
 };
 
-vertex float4 vertexData(const device float *vertices [[ buffer(0) ]],
+vertex VertexOut vertexData(const device float *vertices [[ buffer(0) ]],
                           uint vertexID [[ vertex_id ]]) {
+    VertexOut out;
     
     float x = 1.0 - (float(vertexID) / float(bufferLength - 1) * 2.0); // Map to [-1, 1]
-    float y = 2 * vertices[vertexID] - 1;
-    
-    return float4(x, y, 0.0, 1.0);
+    float y = 2.0 * vertices[vertexID] - 1.0;
+    out.isValid = (vertices[vertexID] != 0.0 && vertices[vertexID] != 1.0);
+    out.position = float4(x, y, 0.0, 1.0);
+    return out;
 }
 
 vertex float4 gridData(const device float *hor [[ buffer(0) ]],

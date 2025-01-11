@@ -41,26 +41,21 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         adapter = LufsAdapter(processHelper: &processHelper!)
     }
     
-    public func getInLuffers() -> [[Float]] {
+    public func getInLuffers() -> [Float] {
         guard let buffer = adapter!.getInLuffers() else {
             return []
         }
-        let result: [[Float]] = buffer.map { row in
-            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
+        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
             }
-        }
-        
         return result
     }
     
-    public func getOutLuffers() -> [[Float]] {
+    public func getOutLuffers() -> [Float] {
         guard let buffer = adapter!.getOutLuffers() else {
             return []
         }
-        let result: [[Float]] = buffer.map { row in
-            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
+        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
             }
-        }
         return result
     }
     
@@ -80,6 +75,14 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return []
         }
         let result: [Float] = buffer.map { $0.floatValue }
+        return result
+    }
+    
+    public func getRecordAverage() -> [Float] {
+        guard let buffer = adapter!.getRecordAverage() else {
+            return []
+        }
+        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60 }
         return result
     }
     
@@ -108,6 +111,30 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         let result: Float = val.floatValue
         
         return result
+    }
+    
+    public func getIsRecording() -> Bool {
+        guard let val = adapter?.getIsRecording() else {
+            return false
+        }
+        
+        return val
+    }
+    
+    public func setIsRecording(recording: Bool) {
+        adapter!.setIsRecording(recording)
+    }
+    
+    public func getIsReset() -> Bool {
+        guard let val = adapter?.getIsReset() else {
+            return false
+        }
+        
+        return val
+    }
+    
+    public func setIsReset(reset: Bool) {
+        adapter!.setIsReset(reset)
     }
     
     public override var inputBusses: AUAudioUnitBusArray {
@@ -210,4 +237,5 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
             return NSString.localizedStringWithFormat("%.f", value) as String
         }
     }
+    
 }

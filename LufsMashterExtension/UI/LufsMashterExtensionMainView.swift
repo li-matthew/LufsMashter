@@ -13,6 +13,8 @@ struct LufsMashterExtensionMainView: View {
     
     @ObservedObject var vizBuffers: ObservableBuffers
     @ObservedObject var meterVals: ObservableVals
+    @ObservedObject var isRecording: ObservableState
+    @ObservedObject var isReset: ObservableState
     
     @State private var metalLufs: MetalLufs?
     @State private var meterView: DataView?
@@ -45,7 +47,7 @@ struct LufsMashterExtensionMainView: View {
             }
             .onAppear {
                 if metalLufs == nil {
-                    metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 500, height: 200), target: parameterTree.global.target)
+                    metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 500, height: 200), target: parameterTree.global.target, isRecording: isRecording)
                 }
                 metalLufs?.metalView = vizBuffers
                 
@@ -60,6 +62,27 @@ struct LufsMashterExtensionMainView: View {
                 ParameterSlider(param: parameterTree.global.smooth, title: "Smooth")
                 Spacer()
                 ParameterSlider(param: parameterTree.global.knee, title: "Knee")
+                Spacer()
+//                Text(!isReset.val ? "Reset" : "Resetting")
+//                    .padding()
+//                    .background(isReset.val ? Color.red : Color.blue)
+//                    .opacity(isReset.val ? 0.5 : 1.0)
+//                    .gesture(
+//                        DragGesture(minimumDistance: 0)
+//                            .onChanged { _ in
+//                                isReset.update(state: true)
+//                            }
+//                    ).disabled(isReset.val || isRecording.val)
+                Text(isRecording.val ? "Stop Recording" : "Start Recording")
+                    .padding()
+                    .background(isRecording.val ? Color.red : Color.blue)
+                    .opacity(isRecording.val ? 0.5 : 1.0)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                isRecording.update(state: !isRecording.val)
+                            }
+                    )
             }.frame(width: 500, height: 100)
         }.padding()
     }
