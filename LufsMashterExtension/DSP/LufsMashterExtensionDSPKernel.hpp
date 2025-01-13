@@ -158,18 +158,22 @@ public:
             }
             
             // TODO: OVERSAMPLE
-            
-//            for (int i = 0; i < frameCount; ++i) {
-//                for (int j = 0; j < oversamplingFactor; ++j) {
-//                    channelBuffers[channel][i * oversamplingFactor + j] = inputBuffers[channel][i];
-//                }
-//            }
+                // Oversample the buffer by inserting zeros between each sample
+            for (size_t i = 0; i < frameCount; ++i) {
+                for (int j = 0; j < oversamplingFactor; ++j) {
+                    if (j == 0) {
+                        overSamples[channel][i * oversamplingFactor + j] = buffers[channel][i];  // Copy original sample
+                    } else {
+                        overSamples[channel][i * oversamplingFactor + j] = 0.0f;  // Insert zero for oversampling
+                    }
+                }
+            }
             const int filterSize = 5;
             float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
-            float filteredBuffer[frameCount];
+            float filteredBuffer[frameCount * oversamplingFactor];
             
             // Perform convolution to simulate the reconstruction (apply the FIR filter)
-            vDSP_conv(buffers[channel], 1, filter, 1, filteredBuffer, 1, frameCount, filterSize);
+            vDSP_conv(overSamples[channel], 1, filter, 1, filteredBuffer, 1, frameCount, filterSize);
             
             // Find the maximum value in the filtered signal (True Peak)
             float channelPeak = 0.0f;
@@ -387,42 +391,12 @@ public:
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 outputBuffers[channel][frameIndex] = outputBuffers[channel][frameIndex] * std::max((prevReduction + step * (frameIndex + 1)), 1e-6f);
             }
-            
-//            for (int i = 0; i < frameCount; ++i) {
-//                for (int j = 0; j < oversamplingFactor; ++j) {
-//                    limitBuffers[channel][i * oversamplingFactor + j] = inputBuffers[channel][i];
-//                }
-//            }
-//            
-//            const int filterSize = 5;
-//            float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
-//            float filteredBuffer[frameCount * oversamplingFactor];
-//            
-//            // Perform convolution to simulate the reconstruction (apply the FIR filter)
-//            vDSP_conv(limitBuffers[channel], 1, filter, 1, filteredBuffer, 1, frameCount, filterSize);
-//            
-//            // Find the maximum value in the filtered signal (True Peak)
-//            truePeak = 0.0f;
-//            vDSP_maxmgv(filteredBuffer, 1, &truePeak, frameCount);
-//            
-//            std::memcpy(outPeaks[channel], &truePeak, sizeof(float));
-//            peakins[channel] = *inPeaks[channel];
-            
-            
+        
             vDSP_biquad(biquadOut[channel].setup,
                         biquadOut[channel].delay,
                         outputBuffers[channel], 1,
                         tempBuffers[channel], 1,
                         frameCount);
-            
-            //            float truePeak;
-            //            vDSP_maxmgv(tempBuffers[channel], 1, &truePeak, frameCount);
-            //            LOG("DDD");
-            //            LOG("%f", truePeak);
-            //            if (truePeak > 1.0f) {
-            //                float peakReduction = 1.0f / truePeak;
-            //                vDSP_vsmul(tempBuffers[channel], 1, &peakReduction, tempBuffers[channel], 1, frameCount);
-            //            }
             
             std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);

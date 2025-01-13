@@ -26,6 +26,11 @@ struct LufsMashterExtensionMainView: View {
         VStack {
             Spacer()
             HStack {
+                VStack {
+                    Text("6dB")
+                    Spacer()
+                    Text("-60dB")
+                }
                 HStack {
                     if let metalLufs = metalLufs {
                         MetalLufsView(metalLufs: metalLufs, target: parameterTree.global.target, thresh: parameterTree.global.thresh, view: $toggleView.val)
@@ -33,7 +38,7 @@ struct LufsMashterExtensionMainView: View {
                     } else {
                         Text("Initializing Metal View...").frame(width: 750, height: 400)
                     }
-                }.padding().border(Color.red)
+                }.padding()/*.border(Color.red)*/
                 Meter(param: parameterTree.global.target, currIn: $lufsVals.vals[0], currOut: $lufsVals.vals[1], currRed: $lufsVals.vals[2])
                 VStack {
                     Text("TP LIMIT")
@@ -46,11 +51,11 @@ struct LufsMashterExtensionMainView: View {
                     Spacer()
                     DataView(param: parameterTree.global.target, val: $tpVals.vals[1], section: "TP", title: "OUT", units: "dB")
                     Spacer()
-                    DataView(param: parameterTree.global.target, val: $tpVals.vals[1], section: "TP", title: "DELTA", units: "LUFS")
+                    DataView(param: parameterTree.global.target, val: $tpVals.vals[1], section: "TP", title: "DELTA", units: "dB")
                     Spacer()
                     DataView(param: parameterTree.global.target, val: $tpVals.vals[3], section: "TP", title: "MAX", units: "dB")
                     Spacer()
-                }.border(Color.red)
+                }/*.border(Color.red)*/
                 VStack {
                     Text("LUFFER")
                     Spacer()
@@ -66,7 +71,7 @@ struct LufsMashterExtensionMainView: View {
                     Spacer()
                     DataView(param: parameterTree.global.target, val: $lufsVals.vals[3], section: "LUFS", title: "INTEGRATED", units: "LUFS")
                     Spacer()
-                }.border(Color.red)
+                }/*.border(Color.red)*/
             }
             .onAppear {
                 if metalLufs == nil {
@@ -74,7 +79,7 @@ struct LufsMashterExtensionMainView: View {
                 }
                 metalLufs?.metalView = vizBuffers
                 
-            }.border(Color.red)
+            }/*.border(Color.red)*/
             HStack {
 
 //                ParameterKnob(param: parameterTree.global.attack, title: "Attack")
@@ -82,10 +87,10 @@ struct LufsMashterExtensionMainView: View {
 //                ParameterKnob(param: parameterTree.global.release, title: "Release")
 //                Spacer()
                 ParameterKnob(param: parameterTree.global.thresh, title: "Threshold")
-                Spacer()
+//                Spacer()
 //                ParameterKnob(param: parameterTree.global.knee, title: "Knee")
 //                Spacer()
-                Text(toggleView.val ? "LUFS" : "TPS")
+                Text(toggleView.val ? "LUFS" : "TP")
                     .frame(width: 50)
                     .padding(2)
                     .background(toggleView.val ? Color.pink : Color.purple)
@@ -93,10 +98,10 @@ struct LufsMashterExtensionMainView: View {
                     .onTapGesture {
                         toggleView.update(state: !toggleView.val)
                     }
-                    .border(Color.red)
-                Spacer()
+//                    .border(Color.red)
+//                Spacer()
                 ParameterKnob(param: parameterTree.global.target, title: "LUFS Target")
-                Spacer()
+//                Spacer()
                 Text("Reset")
                     .frame(width: 50)
                     .padding(2)
@@ -108,7 +113,7 @@ struct LufsMashterExtensionMainView: View {
                         }
                     }
                     .disabled(isReset.val || isRecording.val)
-                    .border(Color.red)
+//                    .border(Color.red)
                 Text(isRecording.val ? "Stop" : "Start")
                     .frame(width: 50)
                     .padding(2)
@@ -118,8 +123,8 @@ struct LufsMashterExtensionMainView: View {
                         isRecording.update(state: !isRecording.val)
                     }
                     .disabled(isReset.val)
-                    .border(Color.red)
-            }.frame(maxWidth: .infinity).border(Color.red)
+//                    .border(Color.red)
+            }/*.border(Color.red)*/
         }.padding().frame(maxWidth: .infinity, maxHeight: .infinity)
         Spacer()
     }
