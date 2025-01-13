@@ -19,6 +19,63 @@
     return self;
 }
 
+- (NSArray<NSNumber*>*)getInPeaks {
+    const float* buffer = _processHelper->getInPeaks();
+    
+    NSMutableArray<NSNumber*>* resultBuffer = [NSMutableArray array];
+        for (int i = 0; i < 1024; ++i) {
+            NSNumber* sample = @(buffer[i]);  // Wrap the float sample in NSNumber
+            [resultBuffer addObject:sample];  // Add NSNumber to the channel array
+        }
+    return [resultBuffer copy];
+}
+
+- (NSArray<NSNumber*>*)getOutPeaks {
+    const float* buffer = _processHelper->getOutPeaks();
+    
+    NSMutableArray<NSNumber*>* resultBuffer = [NSMutableArray array];
+        for (int i = 0; i < 1024; ++i) {
+            NSNumber* sample = @(buffer[i]);  // Wrap the float sample in NSNumber
+            [resultBuffer addObject:sample];  // Add NSNumber to the channel array
+        }
+    return [resultBuffer copy];
+}
+
+- (NSArray<NSNumber*>*)getPeakReduction {
+    const float* buffer = _processHelper->getPeakReduction();
+    
+    NSMutableArray<NSNumber*>* resultBuffer = [NSMutableArray array];
+        for (int i = 0; i < 1024; ++i) {
+            NSNumber* sample = @(buffer[i]);  // Wrap the float sample in NSNumber
+            [resultBuffer addObject:sample];  // Add NSNumber to the channel array
+        }
+    return [resultBuffer copy];
+}
+
+- (NSNumber*)getCurrPeakIn {
+    const float& val = _processHelper->getCurrPeakIn();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrPeakOut {
+    const float& val = _processHelper->getCurrPeakOut();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrPeakRed {
+    const float& val = _processHelper->getCurrPeakRed();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrPeakMax {
+    const float& val = _processHelper->getCurrPeakMax();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
 - (NSArray<NSNumber*>*)getInLuffers {
     const float* buffer = _processHelper->getInLuffers();
     
@@ -41,24 +98,6 @@
     return [resultBuffer copy];
 }
 
-- (NSArray<NSArray<NSNumber*>*>*)getInPeaks {
-    const std::vector<float*>& buffer = _processHelper->getInPeaks();
-    
-    NSMutableArray<NSMutableArray<NSNumber*>*>* resultBuffer = [NSMutableArray array];
-    
-    for (float * channel : buffer) {
-        NSMutableArray<NSNumber*>* channelBuffer = [NSMutableArray array];
-        
-        for (int i = 0; i < 1024; ++i) {
-            NSNumber* sample = @(channel[i]);  // Wrap the float sample in NSNumber
-            [channelBuffer addObject:sample];  // Add NSNumber to the channel array
-        }
-        
-        [resultBuffer addObject:channelBuffer];
-    }
-    return [resultBuffer copy];
-}
-
 - (NSArray<NSNumber*>*)getGainReduction {
     const float* buffer = _processHelper->getGainReduction();
     
@@ -70,8 +109,8 @@
     return [resultBuffer copy];
 }
 
-- (NSArray<NSNumber*>*)getRecordAverage {
-    const float* buffer = _processHelper->getRecordAverage();
+- (NSArray<NSNumber*>*)getRecordIntegrated {
+    const float* buffer = _processHelper->getRecordIntegrated();
     
     NSMutableArray<NSNumber*>* resultBuffer = [NSMutableArray array];
         for (int i = 0; i < 1024; ++i) {
@@ -95,6 +134,12 @@
 
 - (NSNumber*)getCurrRed {
     const float& val = _processHelper->getCurrRed();
+    NSNumber* result = [NSNumber numberWithFloat:val];
+    return result;
+}
+
+- (NSNumber*)getCurrIntegrated {
+    const float& val = _processHelper->getCurrIntegrated();
     NSNumber* result = [NSNumber numberWithFloat:val];
     return result;
 }

@@ -14,7 +14,7 @@ class ObservableBuffers: ObservableObject {
     @Published var buffers: [[[Float]]]
     
     init() {
-        buffers = Array(repeating: Array(repeating: Array(repeating: 0.0, count: 1024), count: 2), count: 5)
+        buffers = Array(repeating: Array(repeating: Array(repeating: 0.0, count: 1024), count: 2), count: 4)
     }
 }
 
@@ -22,26 +22,34 @@ class ObservableVals: ObservableObject {
     @Published var vals: [Float]
     
     init() {
-        vals = Array(repeating: 0.0, count: 3)
+        vals = Array(repeating: 0.0, count: 8)
     }
 }
 
 class ObservableState: ObservableObject {
-    @Published var val: Bool
-//    @Published var trig: Bool
-    
-    init() {
-        val = false
-//        trig = false
+    @Published var val: Bool {
+        didSet {
+            updateAction?(val)
+        }
+    }
+
+    var updateAction: ((Bool) -> Void)? {
+        didSet {
+            DispatchQueue.main.async { [weak self] in
+                self?.updateAction?(self?.val ?? false)
+            }
+        }
+    }
+
+    init(initialValue: Bool = false) {
+        self.val = initialValue
     }
     
     public func update(state: Bool) {
-        self.val = state
+        if state != val {  // Prevent redundant updates
+            self.val = state
+        }
     }
-//
-//    public func strike(state: Bool) {
-//        self.trig = state
-//    }
 }
 
 private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "AudioUnitViewController")
@@ -49,9 +57,13 @@ private let log = Logger(subsystem: "mash.LufsMashterExtension", category: "Audi
 @MainActor
 public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     var vizBuffers: ObservableBuffers = ObservableBuffers()
-    var meterVals: ObservableVals = ObservableVals()
+    
+    var lufsVals: ObservableVals = ObservableVals()
+    var tpVals: ObservableVals = ObservableVals()
+    
     var isRecording: ObservableState = ObservableState()
     var isReset: ObservableState = ObservableState()
+    var toggleView: ObservableState = ObservableState()
     
     var audioUnit: AUAudioUnit?
     var timer: Timer?
@@ -97,52 +109,78 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         timer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
             if let self = self {
                 Task { @MainActor in
-                    self.updateVizBuffers()
-                    self.updateMeterVals()
-                    let recording = self.isRecording.val
-                    let reset = self.isReset.val
-                    self.updateIsRecording(state: recording)
-                    self.updateIsReset(state: reset)
+                    if (self.toggleView.val) {
+                        self.updateLufsBuffers()
+                    } else {
+                        self.updateTpBuffers()
+                    }
+                    
+                    self.updateLufsVals()
+                    self.updateTpVals()
+                    
+                    if (self.isReset.val) {
+                        self.isReset.update(state: self.getIsReset())
+                    }
                 }
             }
         }
     }
-
-//    public func printval() {
-//        NSLog("\(isRecording.val)")
-//    }
  
-    public func updateVizBuffers() {
+    public func updateLufsBuffers() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let buffers = [[audioUnit.getInLuffers()], [audioUnit.getOutLuffers()], [audioUnit.getGainReduction()], audioUnit.getInPeaks(), [audioUnit.getRecordAverage()]]
+        let buffers = [[audioUnit.getInLuffers()], [audioUnit.getOutLuffers()], [audioUnit.getGainReduction()], [audioUnit.getRecordIntegrated()]]
+        bufferSubject.send(buffers)
+        vizBuffers.buffers = buffers
+    }
+    public func updateTpBuffers() {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        let buffers = [[audioUnit.getInPeaks()], [audioUnit.getOutPeaks()], [audioUnit.getPeakReduction()], [audioUnit.getRecordIntegrated()]]
         bufferSubject.send(buffers)
         vizBuffers.buffers = buffers
     }
     
-    public func updateMeterVals() {
+    public func updateLufsVals() {
         guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        let vals = [audioUnit.getCurrIn(), audioUnit.getCurrOut(), audioUnit.getCurrRed()]
+        let vals = [audioUnit.getCurrIn(), audioUnit.getCurrOut(), audioUnit.getCurrRed(), audioUnit.getCurrIntegrated()]
         valSubject.send(vals)
-        meterVals.vals = vals
+        lufsVals.vals = vals
+    }
+    
+    public func updateTpVals() {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+        let vals = [audioUnit.getCurrPeakIn(), audioUnit.getCurrPeakOut(), audioUnit.getCurrPeakRed(), audioUnit.getCurrPeakMax()]
+        valSubject.send(vals)
+        tpVals.vals = vals
     }
     
     public func updateIsRecording(state: Bool) {
-//        DispatchQueue.global(qos: .userInitiated).async {
+        Task { @MainActor in
             guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
             audioUnit.setIsRecording(recording: state)
-//        }
+        }
     }
     
     public func updateIsReset(state: Bool) {
-//        DispatchQueue.global(qos: .userInitiated).async {
+        Task { @MainActor in
             guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
-        if ((audioUnit.getIsReset() == false) && state) {
-            audioUnit.setIsReset(reset: false);
-        } else {
-            audioUnit.setIsReset(reset: state);
-        }
             
-//            isReset.update(state: audioUnit.getIsReset());
+            audioUnit.setIsReset(reset: state)
+        }
+    }
+    
+    public func getIsReset() -> Bool {
+        guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return false }
+        return audioUnit.getIsReset()
+    }
+    
+    
+    public func updateActions() {
+        isRecording.updateAction = { state in
+            self.updateIsRecording(state: state)
+        }
+        isReset.updateAction = { state in
+            self.updateIsReset(state: state)
+        }
     }
     
     deinit {
@@ -153,12 +191,13 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         super.viewDidLoad()
         // Accessing the `audioUnit` parameter prompts the AU to be created via createAudioUnit(with:)
 //        self.preferredContentSize = CGSize(width: 1000, height: 1000)
-        self.view.frame = CGRect(x: 0, y: 0, width: 1000, height: 800)
+//        self.view.frame = CGRect(x: 0, y: 0, width: 1000, height: 1000)
         guard let audioUnit = self.audioUnit else {
             return
         }
         
         configureSwiftUIView(audioUnit: audioUnit)
+        updateActions()
         startTimer()
     }
     
@@ -178,6 +217,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
                 // so that the parameter tree is set up before we build our @AUParameterUI properties
                 DispatchQueue.main.async {
                     self.configureSwiftUIView(audioUnit: audioUnit)
+                    self.updateActions()
                     self.startTimer()
                 }
             }
@@ -211,7 +251,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers, meterVals: meterVals, isRecording: isRecording, isReset: isReset)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers, lufsVals: lufsVals, tpVals: tpVals, isRecording: isRecording, isReset: isReset, toggleView: toggleView)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds

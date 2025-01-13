@@ -35,6 +35,34 @@ public:
     mBufferedInputBus(bufferedInputBus)
     {
     }
+    
+    const float* getInPeaks() const {
+        return mInPeaks;
+    }
+    
+    const float* getOutPeaks() const {
+        return mOutPeaks;
+    }
+    
+    const float* getPeakReduction() const {
+        return mPeakReduction;
+    }
+    
+    const float& getCurrPeakRed() const {
+        return currPeakRed;
+    }
+    
+    const float& getCurrPeakIn() const {
+        return currPeakIn;
+    }
+    
+    const float& getCurrPeakOut() const {
+        return currPeakOut;
+    }
+    
+    const float& getCurrPeakMax() const {
+        return currPeakMax;
+    }
 
     const float* getInLuffers() const {
         return mInLuffers;
@@ -44,16 +72,12 @@ public:
         return mOutLuffers;
     }
     
-    const std::vector<float*>& getInPeaks() const {
-        return mInPeaks;
-    }
-    
     const float* getGainReduction() const {
         return mGainReduction;
     }
     
-    const float* getRecordAverage() const {
-        return mRecordAverage;
+    const float* getRecordIntegrated() const {
+        return mRecordIntegrated;
     }
     
     const float& getCurrIn() const {
@@ -66,6 +90,10 @@ public:
     
     const float& getCurrRed() const {
         return currRed;
+    }
+    
+    const float& getCurrIntegrated() const {
+        return currIntegrated;
     }
     
     void setIsRecording(bool recording) {
@@ -90,27 +118,30 @@ public:
         mOutputBuffers.resize(outputChannelCount);
         mInLufsFrame.resize(inputChannelCount);
         mOutLufsFrame.resize(inputChannelCount);
-//        mInLuffers.resize(inputChannelCount);
-//        mOutLuffers.resize(inputChannelCount);
-        mInPeaks.resize(inputChannelCount);
         
         mGainReduction = new float[1024];
-        mRecordAverage = new float[1024];
+        mRecordIntegrated = new float[1024];
+        mPeakReduction = new float[1024];
         std::fill(mGainReduction, mGainReduction + 1024, 1.0f);
-        std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
+        std::fill(mRecordIntegrated, mRecordIntegrated + 1024, 0.0f);
+        std::fill(mPeakReduction, mPeakReduction + 1024, 0.0f);
         mInLuffers = new float[1024];
         mOutLuffers = new float[1024];
+        mInPeaks = new float[1024];
+        mOutPeaks = new float[1024];
         std::fill(mInLuffers, mInLuffers + 1024, 1e-6f);
         std::fill(mOutLuffers, mOutLuffers + 1024, 1e-6f);
+        std::fill(mInPeaks, mInPeaks + 1024, 1e-6f);
+        std::fill(mOutPeaks, mOutPeaks + 1024, 1e-6f);
         
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mInLufsFrame[channel] = new float[132300];
             mOutLufsFrame[channel] = new float[132300];
-            mInPeaks[channel] = new float[1024];
+           
 //            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
-            std::fill(mInPeaks[channel], mInPeaks[channel] + 1024, 1e-6f);
+            
 //            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
         }
     }
@@ -126,7 +157,7 @@ public:
         AURenderEvent const *nextEvent = events; // events is a linked list, at the beginning, the nextEvent is the first event
 
         auto callProcess = [this] (AudioBufferList* inBufferListPtr, AudioBufferList* outBufferListPtr, AUEventSampleTime now, AUAudioFrameCount frameCount, AUAudioFrameCount const frameOffset) {
-//            mIsRecording = mIsRecording;
+
             for (int channel = 0; channel < inBufferListPtr->mNumberBuffers; ++channel) {
                 mInputBuffers[channel] = (const float*)inBufferListPtr->mBuffers[channel].mData  + frameOffset;
             }
@@ -136,18 +167,16 @@ public:
             }
             
             if (!prevRecording && mIsRecording) {
-//                std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
-                currAverage = 0.0f;
+                currIntegrated = 0.0f;
                 currRed = 1.0f;
                 mRecordCount = 0.0f;
             }
             else if (prevRecording && !mIsRecording) {
-//                std::fill(mRecordAverage, mRecordAverage + 1024, 0.0f);
-//                currAverage = 0.0f;
                 mRecordCount = 0.0f;
             }
+            LOG("SG%d", mIsReset);
 
-            mKernel.process(&mIsReset, mRecordAverage, &mRecordCount, &mIsRecording, &currAverage, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&currPeakMax, &mIsReset, mRecordIntegrated, &mRecordCount, &mIsRecording, &currIntegrated, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mOutPeaks, mPeakReduction, &currPeakIn, &currPeakOut, &currPeakRed, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -249,21 +278,29 @@ private:
     
 //    std::vector<float*> mLookAhead;
     
+    float* mInPeaks;
+    float* mOutPeaks;
+    
+    float* mPeakReduction;
+    float currPeakRed = 1.0;
+    float currPeakIn = 0.0;
+    float currPeakOut = 0.0;
+    float currPeakMax = 0.0;
+    
     std::vector<float*> mInLufsFrame;
-    std::vector<float*> mOutLufsFrame;// samples for calculating lufs
-    float* mInLuffers; // buffer of lufs
+    std::vector<float*> mOutLufsFrame;
+    float* mInLuffers;
     float* mOutLuffers;
-    std::vector<float*> mInPeaks;
-    std::vector<float*> mOutPeaks;
+    
     float* mGainReduction;
-    float* mRecordAverage;
+    float* mRecordIntegrated;
     
     float mRecordCount = 0.0f;
     
     float currIn = 1e-6;
     float currOut = 1e-6;
     float currRed = 1.0;
-    float currAverage = 0.0;
+    float currIntegrated = 0.0;
     
     bool mIsRecording = false;
     bool mIsReset = false;

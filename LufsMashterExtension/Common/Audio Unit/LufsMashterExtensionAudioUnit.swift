@@ -41,6 +41,68 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         adapter = LufsAdapter(processHelper: &processHelper!)
     }
     
+    public func getInPeaks() -> [Float] {
+        guard let buffer = adapter!.getInPeaks() else {
+            return []
+        }
+        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 6.0)) + 60) / 66
+            }
+        return result
+    }
+    
+    public func getOutPeaks() -> [Float] {
+        guard let buffer = adapter!.getOutPeaks() else {
+            return []
+        }
+        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 6.0)) + 60) / 66
+            }
+        return result
+    }
+    
+    public func getPeakReduction() -> [Float] {
+        guard let buffer = adapter!.getPeakReduction() else {
+            return []
+        }
+        let result: [Float] = buffer.map { $0.floatValue }
+        return result
+    }
+    
+    public func getCurrPeakIn() -> Float {
+        guard let val = adapter!.getCurrPeakIn() else {
+            return 1e-6
+        }
+        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 6.0)) + 60) / 66
+        
+        return result
+    }
+    
+    public func getCurrPeakOut() -> Float {
+        guard let val = adapter!.getCurrPeakOut() else {
+            return 1e-6
+        }
+        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 6.0)) + 60) / 66
+        
+        return result
+    }
+    
+    public func getCurrPeakRed() -> Float {
+        guard let val = adapter!.getCurrPeakRed() else {
+            return 1.0
+        }
+        let result: Float = val.floatValue
+        
+        return result
+    }
+    
+    public func getCurrPeakMax() -> Float {
+        guard let val = adapter!.getCurrPeakMax() else {
+            return 1.0
+        }
+        let result: Float = val.floatValue
+        
+        return result
+    }
+    
     public func getInLuffers() -> [Float] {
         guard let buffer = adapter!.getInLuffers() else {
             return []
@@ -59,17 +121,6 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         return result
     }
     
-    public func getInPeaks() -> [[Float]] {
-        guard let buffer = adapter!.getInPeaks() else {
-            return []
-        }
-        let result: [[Float]] = buffer.map { row in
-            row.map { (max(-60.0, min((20 * log10($0.floatValue)), 6.0)) + 60) / 66
-            }
-        }
-        return result
-    }
-    
     public func getGainReduction() -> [Float] {
         guard let buffer = adapter!.getGainReduction() else {
             return []
@@ -78,8 +129,8 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         return result
     }
     
-    public func getRecordAverage() -> [Float] {
-        guard let buffer = adapter!.getRecordAverage() else {
+    public func getRecordIntegrated() -> [Float] {
+        guard let buffer = adapter!.getRecordIntegrated() else {
             return []
         }
         let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60 }
@@ -97,6 +148,15 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
     
     public func getCurrOut() -> Float {
         guard let val = adapter!.getCurrOut() else {
+            return 1e-6
+        }
+        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60
+        
+        return result
+    }
+    
+    public func getCurrIntegrated() -> Float {
+        guard let val = adapter!.getCurrIntegrated() else {
             return 1e-6
         }
         let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60

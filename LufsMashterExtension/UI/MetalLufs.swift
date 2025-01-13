@@ -19,13 +19,13 @@ var lineColors: [SIMD4<Float>] = [
 ]
 
 var horGrid: [Float] = [
-     0.125,
-     0.25,
-     0.375,
-     0.5,
-     0.625,
-     0.75,
-     0.875,
+    0.125,
+    0.25,
+    0.375,
+    0.5,
+    0.625,
+    0.75,
+    0.875,
 ]
 
 public class MetalLufs: MTKView, MTKViewDelegate {
@@ -39,7 +39,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     var outVertexBuffer: MTLBuffer!
     var redVertexBuffer: MTLBuffer!
     var inPeakVertexBuffer: MTLBuffer!
-    var recordAverageVertexBuffer: MTLBuffer!
+    var recordIntegratedVertexBuffer: MTLBuffer!
     
     var horGridBuffer: MTLBuffer!
     var verGridBuffer: MTLBuffer!
@@ -65,10 +65,12 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     
     var target: Float
     var isRecording: Bool
+    var toggleView: Bool
     
-    init(frame frameRect: CGRect, target: ObservableAUParameter, isRecording: ObservableState) {
+    init(frame frameRect: CGRect, target: ObservableAUParameter, isRecording: ObservableState, toggleView: ObservableState) {
         self.target = target.value
         self.isRecording = isRecording.val
+        self.toggleView = toggleView.val
         let device = MTLCreateSystemDefaultDevice()
         commandQueue = device!.makeCommandQueue()
         let vizPipelineStateDescriptor = MTLRenderPipelineDescriptor()
@@ -76,7 +78,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         constants.setConstantValue(&length, type: .uint, index: 0)
         
         let library = try! device?.makeDefaultLibrary(bundle: Bundle.main)
-            
+        
         let fragmentFunction = library!.makeFunction(name: "fragmentData")!
         let vertexFunction = try! library!.makeFunction(name: "vertexData", constantValues: constants)
         let gridFunction = library!.makeFunction(name: "gridData")!
@@ -115,7 +117,7 @@ public class MetalLufs: MTKView, MTKViewDelegate {
         updateVertexBuffers()
         
         clearColor = .init(red: 0.0, green: 0.0, blue: 0.0, alpha: 0)
-
+        
         delegate = self
     }
     
@@ -127,30 +129,18 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     func updateVertexBuffers() {
         let inVertexData: [[Float]] = vizValues[0]
         let outVertexData: [[Float]] = vizValues[1]
-        let inPeakVertexData: [[Float]] = vizValues[3]
-//        if (self.isRecording) {
         let redVertexData: [[Float]] = vizValues[2]
-        let recordAverageVertexData: [[Float]] = vizValues[4]
-            
-//        }
-        
-//        for i in 0..<redVertexData.count {
-//            let value = redVertexData[i]
-//            if value == 0.0 || value == 1.0 {
-//                vertices.append(Float.nan) // Insert NaN for invalid points
-//            } else {
-//                vertices.append(value)
-//            }
-//        }
-//        let redVertexData: [[Float]] = vizValues[2]
-//        let recordAverageVertexData: [[Float]] = vizValues[4]
+        let recordIntegratedVertexData: [[Float]] = vizValues[3]
+//        let inPeakVertexData: [[Float]] = vizValues[3]
+//        let outPeakVertexData: [[Float]] = vizValues[3]
+//        let peakRedVertexData: [[Float]] = vizValues[3]
         
         inVertexBuffer = device!.makeBuffer(bytes: inVertexData[0], length: inVertexData[0].count * MemoryLayout<Float>.size, options: [])
         outVertexBuffer = device!.makeBuffer(bytes: outVertexData[0], length: outVertexData[0].count * MemoryLayout<Float>.size, options: [])
         
-        inPeakVertexBuffer = device!.makeBuffer(bytes: inPeakVertexData[0], length: inPeakVertexData[0].count * MemoryLayout<Float>.size, options: [])
+//        inPeakVertexBuffer = device!.makeBuffer(bytes: inPeakVertexData[0], length: inPeakVertexData[0].count * MemoryLayout<Float>.size, options: [])
         redVertexBuffer = device!.makeBuffer(bytes: redVertexData[0], length: redVertexData[0].count * MemoryLayout<Float>.size, options: [])
-        recordAverageVertexBuffer  = device!.makeBuffer(bytes: recordAverageVertexData[0], length: recordAverageVertexData[0].count * MemoryLayout<Float>.size, options: [])
+        recordIntegratedVertexBuffer  = device!.makeBuffer(bytes: recordIntegratedVertexData[0], length: recordIntegratedVertexData[0].count * MemoryLayout<Float>.size, options: [])
         
     }
     
@@ -163,68 +153,91 @@ public class MetalLufs: MTKView, MTKViewDelegate {
     }
     
     public func draw(in view: MTKView) {
-            guard let drawable = view.currentDrawable,
-                  let renderPassDescriptor = view.currentRenderPassDescriptor,
-                  let vizPipelineState = vizPipelineState,
-                  let gridPipelineState = gridPipelineState,
-                  let commandQueue = commandQueue
+        guard let drawable = view.currentDrawable,
+              let renderPassDescriptor = view.currentRenderPassDescriptor,
+              let vizPipelineState = vizPipelineState,
+              let gridPipelineState = gridPipelineState,
+              let commandQueue = commandQueue
         else {
-                return
-            }
-
-            let commandBuffer = commandQueue.makeCommandBuffer()
-            let renderEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
-
-            renderEncoder?.setRenderPipelineState(gridPipelineState)
+            return
+        }
         
-            renderEncoder?.setVertexBuffer(horGridBuffer, offset: 0, index: 0)
-            renderEncoder?.setFragmentBytes(&lineColors[3],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
-            renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: horGrid.count * 2)
-            
+        let commandBuffer = commandQueue.makeCommandBuffer()
+        let renderEncoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
         
-            
+        renderEncoder?.setRenderPipelineState(gridPipelineState)
+        
+        renderEncoder?.setVertexBuffer(horGridBuffer, offset: 0, index: 0)
+        renderEncoder?.setFragmentBytes(&lineColors[3],
+                                        length: MemoryLayout<SIMD4<Float>>.stride,
+                                        index: 1)
+        renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: horGrid.count * 2)
+        
+//        if (toggleView) {
             renderEncoder?.setVertexBuffer(targetBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[4],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
+                                            length: MemoryLayout<SIMD4<Float>>.stride,
+                                            index: 1)
             renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: 2)
-        
-        
+            
+            
             renderEncoder?.setRenderPipelineState(vizPipelineState)
-        
+            
             renderEncoder?.setVertexBuffer(inVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[0],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
+                                            length: MemoryLayout<SIMD4<Float>>.stride,
+                                            index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-        
+            
             renderEncoder?.setVertexBuffer(outVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[1],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
+                                            length: MemoryLayout<SIMD4<Float>>.stride,
+                                            index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
             
             renderEncoder?.setVertexBuffer(redVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[2],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
+                                            length: MemoryLayout<SIMD4<Float>>.stride,
+                                            index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-        
-            renderEncoder?.setVertexBuffer(inPeakVertexBuffer, offset: 0, index: 0)
-            renderEncoder?.setFragmentBytes(&lineColors[5],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
-            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-            renderEncoder?.setVertexBuffer(recordAverageVertexBuffer, offset: 0, index: 0)
+            renderEncoder?.setVertexBuffer(recordIntegratedVertexBuffer, offset: 0, index: 0)
             renderEncoder?.setFragmentBytes(&lineColors[6],
-                                                        length: MemoryLayout<SIMD4<Float>>.stride,
-                                                        index: 1)
+                                            length: MemoryLayout<SIMD4<Float>>.stride,
+                                            index: 1)
             renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
-
-            renderEncoder?.endEncoding()
-            commandBuffer?.present(drawable)
-            commandBuffer?.commit()
+//        } else {
+//            renderEncoder?.setVertexBuffer(threshBuffer, offset: 0, index: 0)
+//            renderEncoder?.setFragmentBytes(&lineColors[4],
+//                                            length: MemoryLayout<SIMD4<Float>>.stride,
+//                                            index: 1)
+//            renderEncoder?.drawPrimitives(type: .line, vertexStart: 0, vertexCount: 2)
+//            
+//            renderEncoder?.setVertexBuffer(inPeakVertexBuffer, offset: 0, index: 0)
+//            renderEncoder?.setFragmentBytes(&lineColors[5],
+//                                            length: MemoryLayout<SIMD4<Float>>.stride,
+//                                            index: 1)
+//            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+//            
+//            renderEncoder?.setVertexBuffer(outPeakVertexBuffer, offset: 0, index: 0)
+//            renderEncoder?.setFragmentBytes(&lineColors[1],
+//                                            length: MemoryLayout<SIMD4<Float>>.stride,
+//                                            index: 1)
+//            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+//            
+//            renderEncoder?.setVertexBuffer(peakRedVertexBuffer, offset: 0, index: 0)
+//            renderEncoder?.setFragmentBytes(&lineColors[2],
+//                                            length: MemoryLayout<SIMD4<Float>>.stride,
+//                                            index: 1)
+//            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
+//        }
+        
+        
+        
+        
+        
+        
+        renderEncoder?.endEncoding()
+        commandBuffer?.present(drawable)
+        commandBuffer?.commit()
     }
 }

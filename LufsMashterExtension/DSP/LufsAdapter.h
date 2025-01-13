@@ -10,14 +10,21 @@
 @interface LufsAdapter : NSObject
 @property (nonatomic, readonly) AUProcessHelper * processHelper;
 - (instancetype)initWithProcessHelper:(AUProcessHelper*)existingProcessHelper;
+- (NSArray<NSNumber*>*)getInPeaks;
+- (NSArray<NSNumber*>*)getOutPeaks;
+- (NSArray<NSNumber*>*)getPeakReduction;
+- (NSNumber*)getCurrPeakIn;
+- (NSNumber*)getCurrPeakOut;
+- (NSNumber*)getCurrPeakRed;
+- (NSNumber*)getCurrPeakMax;
 - (NSArray<NSNumber*>*)getInLuffers;
 - (NSArray<NSNumber*>*)getOutLuffers;
-- (NSArray<NSArray<NSNumber*>*>*)getInPeaks;
 - (NSArray<NSNumber*>*)getGainReduction;
-- (NSArray<NSNumber*>*)getRecordAverage;
+- (NSArray<NSNumber*>*)getRecordIntegrated;
 - (NSNumber*)getCurrIn;
 - (NSNumber*)getCurrOut;
 - (NSNumber*)getCurrRed;
+- (NSNumber*)getCurrIntegrated;
 - (BOOL)getIsRecording;
 - (void)setIsRecording:(BOOL)recording;
 - (BOOL)getIsReset;

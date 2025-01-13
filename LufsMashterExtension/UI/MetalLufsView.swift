@@ -11,10 +11,15 @@ import MetalKit
 struct MetalLufsView: NSViewRepresentable {
     var metalLufs: MetalLufs
     @State var target: ObservableAUParameter
+    @State var thresh: ObservableAUParameter
+    @Binding var view: Bool
     
     func makeNSView(context: Context) -> MTKView {
-//        metalLufs.target = (max(-60.0, min(20 * log10(target.value), 0.0)) + 60) / 60
-        metalLufs.target = target.value
+        if (view) {
+            metalLufs.target = target.value
+        } else {
+            metalLufs.target = thresh.value
+        }
         return metalLufs
     }
 
@@ -22,8 +27,11 @@ struct MetalLufsView: NSViewRepresentable {
     func updateNSView(_ uiView: MTKView, context: Context) {
         // This is where you can perform updates, like refreshing the Metal view
         if let metalLufs = uiView as? MetalLufs {
-//            metalLufs.target = (max(-60.0, min(20 * log10(target.value), 0.0)) + 60) / 60
-            metalLufs.target = target.value
+            if (view) {
+                metalLufs.target = target.value
+            } else {
+                metalLufs.target = thresh.value
+            }
             metalLufs.updateTarget()
             metalLufs.setNeedsDisplay(metalLufs.bounds)
         }

@@ -11,7 +11,7 @@ import Controls
 /// A SwiftUI Slider container which is bound to an ObservableAUParameter
 ///
 /// This view wraps a SwiftUI Slider, and provides it relevant data from the Parameter, like the minimum and maximum values.
-struct ParameterSlider: View {
+struct ParameterKnob: View {
     @State var param: ObservableAUParameter
     var title: String
     
@@ -19,9 +19,11 @@ struct ParameterSlider: View {
         VStack {
             Text(title).fontWeight(.bold)
             SmallKnob(value: $param.value, range: param.min...param.max)
-                .accessibility(identifier: param.displayName)
+                .accessibility(identifier: param.displayName).frame(maxWidth: 100, maxHeight: 100)
             if (param.displayName == "target") {
                 Text(String(format: "%.2f LUFS", (60 * (param.value)) - 60))
+            } else if (param.displayName == "thresh") {
+                Text(String(format: "%.2f dB", (66 * (param.value)) - 60))
             } else if (param.displayName == "attack" || param.displayName == "release") {
                 Text(String(format: "%.2f", param.value))
             } else {
