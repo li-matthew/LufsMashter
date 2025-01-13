@@ -191,7 +191,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         super.viewDidLoad()
         // Accessing the `audioUnit` parameter prompts the AU to be created via createAudioUnit(with:)
 //        self.preferredContentSize = CGSize(width: 1000, height: 1000)
-//        self.view.frame = CGRect(x: 0, y: 0, width: 1000, height: 1000)
+        self.view.frame = CGRect(x: 0, y: 0, width: 1500, height: 800)
         guard let audioUnit = self.audioUnit else {
             return
         }
