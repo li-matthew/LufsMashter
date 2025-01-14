@@ -107,7 +107,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getInLuffers() else {
             return []
         }
-        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
+        let result: [Float] = buffer.map { (max(-60.0, min((-0.691 + 10 * log10($0.floatValue)), 0.0)) + 60) / 66
             }
         return result
     }
@@ -116,7 +116,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getOutLuffers() else {
             return []
         }
-        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60
+        let result: [Float] = buffer.map { (max(-60.0, min((-0.691 + (10 * log10($0.floatValue))), 0.0)) + 60) / 66
             }
         return result
     }
@@ -133,7 +133,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let buffer = adapter!.getRecordIntegrated() else {
             return []
         }
-        let result: [Float] = buffer.map { (max(-60.0, min((20 * log10($0.floatValue)), 0.0)) + 60) / 60 }
+        let result: [Float] = buffer.map { (max(-60.0, min((-0.691 + (10 * log10($0.floatValue))), 0.0)) + 60) / 66 }
         return result
     }
     
@@ -141,7 +141,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrIn() else {
             return 1e-6
         }
-        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60/* val.floatValue*/
+        let result: Float = (max(-60.0, min((-0.691 + (10 * log10(val.floatValue))), 0.0)) + 60) / 66
         
         return result
     }
@@ -150,7 +150,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrOut() else {
             return 1e-6
         }
-        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60
+        let result: Float = (max(-60.0, min((-0.691 + (10 * log10(val.floatValue))), 0.0)) + 60) / 66
         
         return result
     }
@@ -159,7 +159,7 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         guard let val = adapter!.getCurrIntegrated() else {
             return 1e-6
         }
-        let result: Float = (max(-60.0, min((20 * log10(val.floatValue)), 0.0)) + 60) / 60
+        let result: Float = (max(-60.0, min((-0.691 + (10 * log10(val.floatValue))), 0.0)) + 60) / 66
         
         return result
     }

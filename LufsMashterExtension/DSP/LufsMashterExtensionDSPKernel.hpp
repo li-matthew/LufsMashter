@@ -127,22 +127,11 @@ public:
     }
     
     template <typename T>
-//    void processBuffers(std::span<T> buffers) {
-//        static_assert(std::is_same_v<T, float*> || std::is_same_v<T, const float*>,
-//                      "T must be either float* or const float*");
-//
-//        for (auto buffer : buffers) {
-//            // Example processing: printing the first element of each buffer
-//            std::cout << buffer[0] << std::endl;
-//        }
-//    }
-    
-    void truePeakLimit(float* truePeak, std::span<T> buffers, AUAudioFrameCount frameCount, int oversamplingFactor) {
+    void getTruePeak(float* truePeak, std::span<T> buffers, AUAudioFrameCount frameCount, int oversamplingFactor) {
         static_assert(std::is_same_v<T, float*> || std::is_same_v<T, const float*>,
                               "T must be either float* or const float*");
         int channels = buffers.size();
         float peaks[] = {0.0f, 0.0f};
-        float finalPeak = 0.0f;
         
         std::vector<float*> channelBuffers;
         channelBuffers.resize(channels);
@@ -157,8 +146,7 @@ public:
                 overSamples[channel] = new float[frameCount * oversamplingFactor];
             }
             
-            // TODO: OVERSAMPLE
-                // Oversample the buffer by inserting zeros between each sample
+            // Oversample the buffer by inserting zeros between each sample
             for (size_t i = 0; i < frameCount; ++i) {
                 for (int j = 0; j < oversamplingFactor; ++j) {
                     if (j == 0) {
@@ -181,7 +169,6 @@ public:
             peaks[channel] = channelPeak;
         }
         *truePeak = std::max(peaks[0], peaks[1]);
-        
     }
     
     /**
@@ -221,18 +208,22 @@ public:
          nullptr);	// currentMeasureDownbeatPosition
          }
          */
-        std::vector<float*> tempBuffers;
-        tempBuffers.resize(2);
         
+        // START
+        // Perform per sample dsp on the incoming float in before assigning it to out
         
-        float target =  pow(10, ((mTarget * 60) - 60) / 20);
-        float thresh = pow(10, ((mThresh * 66) - 60) / 20);
+        std::vector<float*> kFilterBuffers;
+        kFilterBuffers.resize(2);
+        
+        float lufsGate = pow(10, -60 / 10);
+        float lufsTarget = pow(10, ((mTarget * 66) - 60) / 20);
+        float tpThresh = pow(10, ((mThresh * 66) - 60) / 20);
 
-        float targetEnergy = lufsWindow * target * target;
+        float targetEnergy = lufsWindow * lufsTarget * lufsTarget;
         float reduction = 1.0;
         int oversamplingFactor = 4.0;
         
-//        float attack = 1.0f / (/*44.1 * */mAttack);
+        float attack = mAttack;
         float release = mRelease;
         float prevReduction = *gainReduction;
         
@@ -245,9 +236,12 @@ public:
         float finalAverage = 0.0f;
         float finalIn = 0.0f;
         float finalOut = 0.0f;
-        float finalPeakIn = 0.0f;
+        
+        float truePeak = 0.0f;
+//        float finalPeakIn = 0.0f;
 //        float finalPeakOut = 0.0f;
         
+        // SHIFT BUFFERS
         std::copy_backward(gainReduction, gainReduction + (vizLength - 1), gainReduction + vizLength);
         std::copy_backward(recordIntegrated, recordIntegrated + (vizLength - 1), recordIntegrated + vizLength);
         std::copy_backward(inLuffers, inLuffers + (vizLength - 1), inLuffers + vizLength);
@@ -256,154 +250,141 @@ public:
         std::copy_backward(outPeaks, outPeaks + (vizLength - 1), outPeaks + vizLength);
         std::copy_backward(peakReduction, peakReduction + (vizLength - 1), peakReduction + vizLength);
         
-        
-        // Perform per sample dsp on the incoming float in before assigning it to out
-        
-        float truePeak = 0.0f;
-        truePeakLimit(&truePeak, inputBuffers, frameCount, oversamplingFactor);
+        // START TP LIMITER
+        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor);
         std::memcpy(inPeaks, &truePeak, sizeof(float));
         *currPeakIn = *inPeaks;
-        LOG("%f", thresh);
         if (truePeak > *currPeakMax) {
             *currPeakMax = truePeak;
         }
-        if (truePeak > thresh) {
-            LOG("%f OVER", truePeak);
-            *currPeakRed = thresh / truePeak; // Gain factor to bring the peak under threshold
+        if (truePeak > tpThresh) {
+            *currPeakRed = tpThresh / truePeak; // Gain factor to bring the peak under threshold
         } else {
             *currPeakRed = 1.0f;
         }
-        
-        float releaseCoef = std::pow(10.0f, -1.0f / (release * 44.1f));
-        *currPeakRed = *currPeakRed * releaseCoef;
-        
+
         *peakReduction = (float)std::clamp(*currPeakRed, 1e-6f, 1.0f);
         *currPeakRed = *peakReduction;
         
-        
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
-            float inRms;
-            
-            if (!tempBuffers[channel]) {
-                tempBuffers[channel] = new float[frameCount];
-            }
-            
-            // APPLY LIMITING
+            // APPLY LIMITER REDUCTION
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * *currPeakRed;
             }
             
-            truePeakLimit(&truePeak, outputBuffers, frameCount, oversamplingFactor);
+            // OUT PEAKS
+            getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor);
             std::memcpy(outPeaks, &truePeak, sizeof(float));
             *currPeakOut = *outPeaks;
             
-            // Shift lufsFrame
+            
+            // LUFFERS BEGIN
+            if (!kFilterBuffers[channel]) {
+                kFilterBuffers[channel] = new float[frameCount];
+            }
+            
+            float inRms;
+            
+            // SHIFT LUFSFRAME
             std::copy_backward(outLufsFrame[channel], outLufsFrame[channel] + (lufsWindow - frameCount), outLufsFrame[channel] + lufsWindow);
             std::copy_backward(inLufsFrame[channel], inLufsFrame[channel] + (lufsWindow - frameCount), inLufsFrame[channel] + lufsWindow);
-            //            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
+//            std::copy_backward(lookAhead[channel], lookAhead[channel] + (441 - frameCount), lookAhead[channel] + 441);
 
-            // Do your sample by sample dsp here...
+            // K WEIGHTING FILTER
             vDSP_biquad_SetCoefficientsDouble(biquadIn[channel].setup, Coeffs, 0, 1);
             vDSP_biquad_SetCoefficientsDouble(biquadOut[channel].setup, Coeffs, 0, 1);
             
             vDSP_biquad(biquadIn[channel].setup,
                         biquadIn[channel].delay,
                         outputBuffers[channel], 1,
-                        tempBuffers[channel], 1,
+                        kFilterBuffers[channel], 1,
                         frameCount);
-
-            std::memcpy(inLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
+            
+            std::memcpy(inLufsFrame[channel], kFilterBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(inLufsFrame[channel], 1, &inRms, lufsWindow);
-            
             ins[channel] = inRms;
-            
-            if (!*isReset) {
-                if (*isRecording) {
-                    LOG("ON");
-                    *prevRecording = true;
-                    averages[channel] = (*currIntegrated * (*recordCount) + inRms) / (*recordCount + 1);
-                    
-                    if (channel == 1) {
-                        *recordCount = *recordCount + 1.0f;
-                    }
-                    
-                    float currEnergy = lufsWindow * averages[channel] * averages[channel];
-                    float gainFactor = targetEnergy / currEnergy;
-                    if (currEnergy <= 0.0f) currEnergy = 1e-6f;
-                    if (gainFactor < 1.0f) {
-                        //                    reduction = log10(gainFactor + 1.0f);
-                        //                    energyDelta = std::max(currEnergy - targetEnergy, 1e-6f);
-                        //                    float logExcessEnergy = log10(1.0f + energyDelta / targetEnergy);
-                        //                    reduction = 1.0f - logExcessEnergy;
-                        reduction = std::sqrt(gainFactor);
-                        reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
-                        reds[channel] = reduction;
-                    } else {
-                        LOG("POP");
-                        reds[channel] = 1.0f;
-                    }
-                } else {
-                    LOG("OFF");
-                    *prevRecording = false;
-                }
-            }
         }
-            
-        finalIn = (ins[0] + ins[1]) / 2;
+        
+        // COMBINE CHANNEL CALCS
+        finalIn = ((ins[0] * ins[0]) + (ins[1] * ins[1]));
+        if (finalIn < lufsGate) {
+            finalIn = 0.0f;
+        }
         std::memcpy(inLuffers, &finalIn, sizeof(float));
         *currIn = *inLuffers;
         
-        if (*isRecording) {
-            finalAverage = (averages[0] + averages[1]) / 2;
-            finalReduction = std::min(reds[0], reds[1]);
+        // GET AVG AND GAIN RED WHILE RECORDING
+        if (!*isReset) {
+            if (*isRecording) {
+                LOG("ON");
+                *prevRecording = true;
+                finalAverage = (*currIntegrated * (*recordCount) + finalIn) / (*recordCount + 1);
 
-            std::memcpy(gainReduction, &finalReduction, sizeof(float));
-            *currRed = *gainReduction;
-            std::memcpy(recordIntegrated, &finalAverage, sizeof(float));
-            *currIntegrated = *recordIntegrated;
+                *recordCount = *recordCount + 1.0f;
+                
+                float currEnergy = lufsWindow * finalAverage;
+                float gainFactor = targetEnergy / currEnergy;
+                if (currEnergy <= 0.0f) currEnergy = 1e-6f;
+                
+                if (gainFactor < 1.0f) {
+                    reduction = std::sqrt(gainFactor);
+                    reduction = (float)std::clamp(reduction, 1e-6f, 1.0f);
+                    finalReduction = reduction;
+                } else {
+                    LOG("POP");
+                    finalReduction = 1.0f;
+                }
+            } else {
+                LOG("OFF");
+                *prevRecording = false;
+                finalReduction = gainReduction[1];
+                finalAverage = recordIntegrated[1];
+            }
         } else {
-            if (*isReset) {
+            if (!*isRecording) {
                 LOG("SETTING");
                 
                 finalReduction = gainReduction[1] + 0.05;
                 finalReduction = (float)std::clamp(finalReduction, 1e-6f, 1.0f);
-                LOG("%f", finalReduction);
                 if (finalReduction > 0.9) {
                     finalReduction = 1.0f;
                     *isReset = false;
                 }
-                std::memcpy(gainReduction, &finalReduction, sizeof(float));
-                *currRed = *gainReduction;
-                recordIntegrated[0] = 0.0f;
-            } else {
-                gainReduction[0] = gainReduction[1];
-                recordIntegrated[0] = recordIntegrated[1];
+                finalAverage = 0.0f;
             }
         }
         
+        std::memcpy(gainReduction, &finalReduction, sizeof(float));
+        *currRed = *gainReduction;
+        std::memcpy(recordIntegrated, &finalAverage, sizeof(float));
+        *currIntegrated = *recordIntegrated;
         
+        // APPLY GAIN RED
         float step = (*currRed - prevReduction) / frameCount;
         
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             float outRms;
             
-            
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 outputBuffers[channel][frameIndex] = outputBuffers[channel][frameIndex] * std::max((prevReduction + step * (frameIndex + 1)), 1e-6f);
             }
-        
+            
+            // OUT LUFS
             vDSP_biquad(biquadOut[channel].setup,
                         biquadOut[channel].delay,
                         outputBuffers[channel], 1,
-                        tempBuffers[channel], 1,
+                        kFilterBuffers[channel], 1,
                         frameCount);
             
-            std::memcpy(outLufsFrame[channel], tempBuffers[channel], frameCount * sizeof(float));
+            std::memcpy(outLufsFrame[channel], kFilterBuffers[channel], frameCount * sizeof(float));
             vDSP_rmsqv(outLufsFrame[channel], 1, &outRms, lufsWindow);
             outs[channel] = outRms;
         }
-        
-        finalOut = (outs[0] + outs[1]) / 2;
+
+        finalOut = ((outs[0] * outs[0]) + (outs[1] * outs[1]));
+        if (finalOut < lufsGate) {
+            finalOut = 0.0f;
+        }
         std::memcpy(outLuffers, &finalOut, sizeof(float));
         *currOut = *outLuffers;
         
@@ -449,11 +430,11 @@ public:
     
     int stages = 2;
     double Coeffs[10] = {
-        1.53512948,         // b
-        -2.69169634,
+        1.53512485,         // b
+        -2.69169618,
         1.19839281,
-        -1.69500495,        // a
-        0.73199158,
+        -1.69065929,        // a
+        0.73248077,
         
         1.0,                // b
         -2.0,
