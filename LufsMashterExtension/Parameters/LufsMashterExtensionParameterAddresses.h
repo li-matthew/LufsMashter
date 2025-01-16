@@ -10,9 +10,11 @@
 #include <AudioToolbox/AUParameters.h>
 
 typedef NS_ENUM(AUParameterAddress, LufsMashterExtensionParameterAddress) {
-    target = 0,
-    attack = 1,
-    release = 2,
-    thresh = 3,
-    knee = 4
+    osfactor = 0,
+    filtersize = 1,
+    thresh = 2,
+    attack = 3,
+    release = 4,
+    target = 5
+//    knee = 4
 };

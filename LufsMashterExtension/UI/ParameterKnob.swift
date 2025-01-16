@@ -18,16 +18,26 @@ struct ParameterKnob: View {
     var body: some View {
         VStack {
             Text(title).fontWeight(.bold)
-            SmallKnob(value: $param.value, range: param.min...param.max)
-                .accessibility(identifier: param.displayName).frame(maxWidth: 100, maxHeight: 100)
-            if (param.displayName == "target") {
-                Text(String(format: "%.2f LUFS", (60 * (param.value)) - 60))
-            } else if (param.displayName == "thresh") {
-                Text(String(format: "%.2f dB", (66 * (param.value)) - 60))
-            } else if (param.displayName == "attack" || param.displayName == "release") {
-                Text(String(format: "%.2f", param.value))
+            if (param.displayName == "filtersize") {
+                SmallKnob(value: $param.value, range: param.min...param.max)
+                    .onChange(of: param.value) { _, newValue in
+                        
+                        param.value = round(newValue)
+                    }
+                    .accessibility(identifier: param.displayName).frame(maxWidth: 100, maxHeight: 100)
+                Text(String(format: "%.0f", param.value))
             } else {
-                Text(String(format: "%.2f", param.value))
+                SmallKnob(value: $param.value, range: param.min...param.max)
+                    .accessibility(identifier: param.displayName).frame(maxWidth: 100, maxHeight: 100)
+                if (param.displayName == "target") {
+                    Text(String(format: "%.2f LUFS", (66 * (param.value)) - 60))
+                } else if (param.displayName == "thresh") {
+                    Text(String(format: "%.2f dB", (66 * (param.value)) - 60))
+                } else if (param.displayName == "attack" || param.displayName == "release") {
+                    Text(String(format: "%.2f", param.value))
+                } else {
+                    Text(String(format: "%.2f", param.value))
+                }
             }
         }
     }

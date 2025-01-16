@@ -11,9 +11,25 @@ import AudioToolbox
 let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
     ParameterGroupSpec(identifier: "global", name: "Global") {
         ParameterSpec(
-            address: .target,
-            identifier: "target",
-            name: "target",
+            address: .osfactor,
+            identifier: "osfactor",
+            name: "osfactor",
+            units: .generic,
+            valueRange: 2.0...16.0,
+            defaultValue: 4.0
+        )
+        ParameterSpec(
+            address: .filtersize,
+            identifier: "filtersize",
+            name: "filtersize",
+            units: .generic,
+            valueRange: 0.0...1.0,
+            defaultValue: 0.1
+        )
+        ParameterSpec(
+            address: .thresh,
+            identifier: "thresh",
+            name: "thresh",
             units: .generic,
             valueRange: 0.0...1.0,
             defaultValue: 1.0
@@ -35,21 +51,22 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             defaultValue: 75.0
         )
         ParameterSpec(
-            address: .thresh,
-            identifier: "thresh",
-            name: "thresh",
+            address: .target,
+            identifier: "target",
+            name: "target",
             units: .generic,
             valueRange: 0.0...1.0,
             defaultValue: 1.0
         )
-        ParameterSpec(
-            address: .knee,
-            identifier: "knee",
-            name: "knee",
-            units: .generic,
-            valueRange: 1.0...25.0,
-            defaultValue: 15.0
-        )
+//
+//        ParameterSpec(
+//            address: .knee,
+//            identifier: "knee",
+//            name: "knee",
+//            units: .generic,
+//            valueRange: 1.0...25.0,
+//            defaultValue: 15.0
+//        )
     }
 }
 

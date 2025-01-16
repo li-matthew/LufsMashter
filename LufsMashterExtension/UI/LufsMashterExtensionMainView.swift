@@ -88,11 +88,17 @@ struct LufsMashterExtensionMainView: View {
             }
             
             HStack { // BOTTOM
-//                ParameterKnob(param: parameterTree.global.attack, title: "Attack")
+                
 //                Spacer()
-//                ParameterKnob(param: parameterTree.global.release, title: "Release")
+                
 //                Spacer()
+//                DiscreteParameterKnob(param: parameterTree.global.osfactor, title: "Oversampling")
+//                ParameterKnob(param: parameterTree.global.filtersize, title: "Filter Size")
+                ParameterSlider(param: parameterTree.global.filtersize, title: "Filter Size")
                 ParameterKnob(param: parameterTree.global.thresh, title: "Threshold")
+                ParameterKnob(param: parameterTree.global.attack, title: "Attack")
+                ParameterKnob(param: parameterTree.global.release, title: "Release")
+                
 //                Spacer()
 //                ParameterKnob(param: parameterTree.global.knee, title: "Knee")
 //                Spacer()

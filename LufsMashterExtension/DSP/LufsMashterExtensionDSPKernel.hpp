@@ -75,8 +75,14 @@ public:
     // MARK: - Parameter Getter / Setter
     void setParameter(AUParameterAddress address, AUValue value) {
         switch (address) {
-            case LufsMashterExtensionParameterAddress::target:
-                mTarget = value;
+            case LufsMashterExtensionParameterAddress::osfactor:
+                mOsFactor = value;
+                break;
+            case LufsMashterExtensionParameterAddress::filtersize:
+                mFilterSize = value;
+                break;
+            case LufsMashterExtensionParameterAddress::thresh:
+                mThresh = value;
                 break;
             case LufsMashterExtensionParameterAddress::attack:
                 mAttack = value;
@@ -84,12 +90,13 @@ public:
             case LufsMashterExtensionParameterAddress::release:
                 mRelease = value;
                 break;
-            case LufsMashterExtensionParameterAddress::thresh:
-                mThresh = value;
+            case LufsMashterExtensionParameterAddress::target:
+                mTarget = value;
                 break;
-            case LufsMashterExtensionParameterAddress::knee:
-                mKnee = value;
-                break;
+            
+//            case LufsMashterExtensionParameterAddress::knee:
+//                mKnee = value;
+//                break;
                 // Add a case for each parameter in LufsMashterExtensionParameterAddresses.h
         }
     }
@@ -98,16 +105,20 @@ public:
         // Return the goal. It is not thread safe to return the ramping value.
         
         switch (address) {
-            case LufsMashterExtensionParameterAddress::target:
-                return (AUValue)mTarget;
+            case LufsMashterExtensionParameterAddress::osfactor:
+                return (AUValue)mOsFactor;
+            case LufsMashterExtensionParameterAddress::filtersize:
+                return (AUValue)mFilterSize;
+            case LufsMashterExtensionParameterAddress::thresh:
+                return (AUValue)mThresh;
             case LufsMashterExtensionParameterAddress::attack:
                 return (AUValue)mAttack;
             case LufsMashterExtensionParameterAddress::release:
                 return (AUValue)mRelease;
-            case LufsMashterExtensionParameterAddress::thresh:
-                return (AUValue)mThresh;
-            case LufsMashterExtensionParameterAddress::knee:
-                return (AUValue)mKnee;
+            case LufsMashterExtensionParameterAddress::target:
+                return (AUValue)mTarget;
+//            case LufsMashterExtensionParameterAddress::knee:
+//                return (AUValue)mKnee;
             default: return 0.f;
         }
     }
@@ -127,7 +138,7 @@ public:
     }
     
     template <typename T>
-    void getTruePeak(float* truePeak, std::span<T> buffers, AUAudioFrameCount frameCount, int oversamplingFactor) {
+    void getTruePeak(float* truePeak, std::span<T> buffers, AUAudioFrameCount frameCount, int oversamplingFactor, int filterSize) {
         static_assert(std::is_same_v<T, float*> || std::is_same_v<T, const float*>,
                               "T must be either float* or const float*");
         int channels = buffers.size();
@@ -156,8 +167,12 @@ public:
                     }
                 }
             }
-            const int filterSize = 5;
-            float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
+//            const int filterSize = mFilterSize;
+            float filter[filterSize];
+            for (int i = 0; i < filterSize; ++i) {
+                filter[i] = 1.0f / filterSize;
+            }
+//            float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
             float filteredBuffer[frameCount * oversamplingFactor];
             
             // Perform convolution to simulate the reconstruction (apply the FIR filter)
@@ -222,9 +237,10 @@ public:
         float targetEnergy = lufsWindow * lufsTarget * lufsTarget;
         float reduction = 1.0;
         int oversamplingFactor = 4.0;
+        int filterSize = (int)(mFilterSize * (128 - 3)) + 3;
         
-        float attack = mAttack;
-        float release = mRelease;
+//        float attack = mAttack;
+//        float release = mRelease;
         float prevReduction = *gainReduction;
         
         float reds[] = {1.0f, 1.0f};
@@ -251,7 +267,8 @@ public:
         std::copy_backward(peakReduction, peakReduction + (vizLength - 1), peakReduction + vizLength);
         
         // START TP LIMITER
-        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor);
+        LOG("%d SDFSD", filterSize);
+        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor, filterSize);
         std::memcpy(inPeaks, &truePeak, sizeof(float));
         *currPeakIn = *inPeaks;
         if (truePeak > *currPeakMax) {
@@ -273,7 +290,7 @@ public:
             }
             
             // OUT PEAKS
-            getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor);
+            getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, filterSize);
             std::memcpy(outPeaks, &truePeak, sizeof(float));
             *currPeakOut = *outPeaks;
             
@@ -422,11 +439,14 @@ public:
     const int vizLength = 1024;
     double mSampleRate = 44100.0;
     
-    double mTarget = 1.0;
+    double mOsFactor = 2.0;
+    double mFilterSize = 5.0;
+    double mThresh = 1.0;
     double mAttack = 0.5;
     double mRelease = 0.5;
-    double mThresh = 1.0;
-    double mKnee = 12.0;
+    double mTarget = 1.0;
+
+//    double mKnee = 12.0;
     
     int stages = 2;
     double Coeffs[10] = {
