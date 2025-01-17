@@ -9,7 +9,7 @@ import MetalKit
 import Combine
 
 var lineColors: [SIMD4<Float>] = [
-    SIMD4(1.0, 1.0, 1.0, 0.5), // gray
+    SIMD4(1.0, 1.0, 1.0, 0.35), // gray
     SIMD4(0.0, 1.0, 0.0, 1.0), // Green
     SIMD4(0.0, 0.0, 1.0, 1.0),  // Blue
     SIMD4(1.0, 1.0, 1.0, 0.15),   // White 0.25
@@ -230,12 +230,6 @@ public class MetalLufs: MTKView, MTKViewDelegate {
 //                                            index: 1)
 //            renderEncoder?.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 1024)
 //        }
-        
-        
-        
-        
-        
-        
         renderEncoder?.endEncoding()
         commandBuffer?.present(drawable)
         commandBuffer?.commit()

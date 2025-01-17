@@ -291,10 +291,10 @@ public:
         std::copy_backward(peakReduction, peakReduction + (vizLength - 1), peakReduction + vizLength);
         
         // START TP LIMITER
-        getTruePeak(&truePeak, inputBuffers, frameCount, 4, 31);
+        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor, 31);
         std::memcpy(inPeaks, &truePeak, sizeof(float));
         *currPeakIn = *inPeaks;
-        if (truePeak < 2.0 ) {
+        if (truePeak < 2.0 ) { // Clamp
             if (truePeak > *currPeakMax) {
                 *currPeakMax = truePeak;
             }
@@ -304,6 +304,8 @@ public:
             } else {
                 *currPeakRed = 1.0f;
             }
+            
+//            float adaptiveRelease = (1 - *currReduction) 
             
             if (*currPeakRed < prevLimit) {
                 *currPeakRed = prevLimit + attack * (*currPeakRed - prevLimit);
@@ -322,9 +324,9 @@ public:
             }
             
             // OUT PEAKS
-//            getTruePeak(&truePeak, outputBuffers, frameCount, 4, 31);
-//            std::memcpy(outPeaks, &truePeak, sizeof(float));
-//            *currPeakOut = *outPeaks;
+            getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, 31);
+            std::memcpy(outPeaks, &truePeak, sizeof(float));
+            *currPeakOut = *outPeaks;
             
             
             // LUFFERS BEGIN
@@ -441,8 +443,8 @@ public:
 
         // Compute elapsed time
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
-        double latencyInMicroseconds = duration.count() / 1000.0;
-//            LOG("%f ms", latencyInMicroseconds);
+        double latencyInMilliseconds = duration.count() / 1000.0f;
+        LOG("%f ms", latencyInMilliseconds);
     }
     
     void handleOneEvent(AUEventSampleTime now, AURenderEvent const *event) {
@@ -472,7 +474,7 @@ public:
     double mSampleRate = 44100.0;
     
     int osFactors[4] = { 2, 4, 8, 16 };
-    double mOsFactor = 2.0;
+    double mOsFactor = 1.0;
     double mFilterSize = 5.0;
     double mThresh = 1.0;
     double mAttack = 0.5;
