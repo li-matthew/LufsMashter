@@ -23,9 +23,9 @@ struct ParameterSlider: View {
                     // Map the slider value to the discrete range
                     param.value = reMap(sliderValue: mapToDiscreteRange(sliderValue: newValue, minValue: 3, maxValue: 128), minValue: 3, maxValue: 128)
                 }
-                .frame(width: 10, height: 128)
+                .frame(width: 10, height: 100)
             Text(String(format: "%.0f", mapToDiscreteRange(sliderValue: param.value, minValue: 3, maxValue: 128)))
-        }
+        }.border(Color.red)
             
     }
     

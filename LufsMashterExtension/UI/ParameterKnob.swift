@@ -34,11 +34,11 @@ struct ParameterKnob: View {
                 } else if (param.displayName == "thresh") {
                     Text(String(format: "%.2f dB", (66 * (param.value)) - 60))
                 } else if (param.displayName == "attack" || param.displayName == "release") {
-                    Text(String(format: "%.2f", param.value))
+                    Text(String(format: "%.2f ms", param.value * 1000))
                 } else {
                     Text(String(format: "%.2f", param.value))
                 }
             }
-        }
+        }.border(Color.red)
     }
 }

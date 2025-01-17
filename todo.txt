@@ -2,7 +2,35 @@ Lookahead
 Latency
 Labels
 
-compare frames incoming energy with to be removed energy
-parameter for corners smooth
+true peak sometimes is high
 
-bug that reduces when under threshold
+float truePeakLimiterWithEffects(float sample, float truePeak, float threshold,
+                                  float saturationDrive, int bitDepth,
+                                  float transientAttack, float releaseCoef) {
+    // Apply dynamic soft clipping (saturation)
+    if (truePeak > threshold) {
+        sample = softClip(sample, saturationDrive);  // Apply saturation
+
+        // Apply bitcrushing (glitch effects)
+        sample = bitcrusher(sample, bitDepth);
+
+        // Apply transient shaping for crunchiness
+        sample = transientShaper(sample, transientAttack);
+        
+        // Apply frequency modulation (metallic tones)
+        sample = ringModulation(sample, 500.0f);  // Ring modulation frequency
+    }
+
+    // Apply release behavior (adaptive or harmonic)
+    sample = adaptiveRelease(sample, releaseCoef);
+
+    // Final limiting (after effects)
+    if (truePeak > threshold) {
+        float reductionFactor = threshold / truePeak;
+        sample *= reductionFactor;
+    }
+
+    return sample;
+}
+
+

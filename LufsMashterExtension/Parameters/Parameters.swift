@@ -15,8 +15,8 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "osfactor",
             name: "osfactor",
             units: .generic,
-            valueRange: 2.0...16.0,
-            defaultValue: 4.0
+            valueRange: 0.0...3.0,
+            defaultValue: 1.0
         )
         ParameterSpec(
             address: .filtersize,
@@ -39,16 +39,16 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "attack",
             name: "attack",
             units: .generic,
-            valueRange: 1.0...500.0,
-            defaultValue: 5.0
+            valueRange: 0.01...1.0,
+            defaultValue: 0.05
         )
         ParameterSpec(
             address: .release,
             identifier: "release",
             name: "release",
             units: .generic,
-            valueRange: 1.0...500.0,
-            defaultValue: 75.0
+            valueRange: 0.01...1.0,
+            defaultValue: 0.05
         )
         ParameterSpec(
             address: .target,

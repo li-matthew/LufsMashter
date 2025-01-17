@@ -124,7 +124,7 @@ public:
         mPeakReduction = new float[1024];
         std::fill(mGainReduction, mGainReduction + 1024, 1.0f);
         std::fill(mRecordIntegrated, mRecordIntegrated + 1024, 0.0f);
-        std::fill(mPeakReduction, mPeakReduction + 1024, 0.0f);
+        std::fill(mPeakReduction, mPeakReduction + 1024, 1.0f);
         mInLuffers = new float[1024];
         mOutLuffers = new float[1024];
         mInPeaks = new float[1024];
@@ -174,8 +174,7 @@ public:
             else if (prevRecording && !mIsRecording) {
                 mRecordCount = 0.0f;
             }
-            LOG("SG%d", mIsReset);
-
+            
             mKernel.process(&currPeakMax, &mIsReset, mRecordIntegrated, &mRecordCount, &mIsRecording, &currIntegrated, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mOutPeaks, mPeakReduction, &currPeakIn, &currPeakOut, &currPeakRed, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         

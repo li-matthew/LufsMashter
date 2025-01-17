@@ -143,47 +143,70 @@ public:
                               "T must be either float* or const float*");
         int channels = buffers.size();
         float peaks[] = {0.0f, 0.0f};
-        
-        std::vector<float*> channelBuffers;
-        channelBuffers.resize(channels);
-        std::vector<float*> overSamples;
-        overSamples.resize(channels);
+        int oversampleSize = (frameCount + filterSize - 1) * oversamplingFactor;
         
         for (UInt32 channel = 0; channel < channels; ++channel) {
-            if (!channelBuffers[channel]) {
-                channelBuffers[channel] = new float[frameCount];
-            }
-            if (!overSamples[channel]) {
-                overSamples[channel] = new float[frameCount * oversamplingFactor];
-            }
-            
+            float* overSamples = new float[oversampleSize];
+            std::fill(overSamples, overSamples + oversampleSize, 0.0f);
+
             // Oversample the buffer by inserting zeros between each sample
             for (size_t i = 0; i < frameCount; ++i) {
                 for (int j = 0; j < oversamplingFactor; ++j) {
                     if (j == 0) {
-                        overSamples[channel][i * oversamplingFactor + j] = buffers[channel][i];  // Copy original sample
-                    } else {
-                        overSamples[channel][i * oversamplingFactor + j] = 0.0f;  // Insert zero for oversampling
+                        overSamples[(i + (filterSize / 2)) * oversamplingFactor + j] = buffers[channel][i];  // Copy original sample
                     }
                 }
             }
-//            const int filterSize = mFilterSize;
+            
             float filter[filterSize];
+//            float normCutoff = ((mSampleRate / 2.0) * 0.98) / mSampleRate;
+//            float normCutoff = 1.0f / (2.0f * oversamplingFactor);
+            float normCutoff = (mSampleRate / 2.0f) * 0.98 / mSampleRate;
             for (int i = 0; i < filterSize; ++i) {
-                filter[i] = 1.0f / filterSize;
+                float x = i - (filterSize - 1) / 2.0f;
+                float sinc = ((fabsf(x) < 1e-6f)) ? 1.0f : sinf(2.0f * M_PI * normCutoff * x) / (M_PI * x);
+                float hamming = 0.54f - 0.46f * cosf(2.0f * M_PI * i / (filterSize - 1));
+                filter[i] = sinc * hamming;
             }
-//            float filter[filterSize] = { 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize, 1.0f / filterSize };
-            float filteredBuffer[frameCount * oversamplingFactor];
+            
+            float sum = 0.0f;
+            vDSP_sve(filter, 1, &sum, filterSize);
+            float normFactor = 1.0f / sum;
+            vDSP_vsmul(filter, 1, &normFactor, filter, 1, filterSize);
+            
+            float filteredBuffer[oversampleSize];
             
             // Perform convolution to simulate the reconstruction (apply the FIR filter)
-            vDSP_conv(overSamples[channel], 1, filter, 1, filteredBuffer, 1, frameCount, filterSize);
+            vDSP_conv(overSamples, 1, filter, 1, filteredBuffer, 1, oversampleSize, filterSize);
             
             // Find the maximum value in the filtered signal (True Peak)
             float channelPeak = 0.0f;
-            vDSP_maxmgv(filteredBuffer, 1, &channelPeak, frameCount);
+            vDSP_maxmgv(filteredBuffer, 1, &channelPeak, oversampleSize);
             peaks[channel] = channelPeak;
+            delete[] overSamples;
         }
+        
+        
         *truePeak = std::max(peaks[0], peaks[1]);
+        if (*truePeak > 1.0) {
+            LOG("%fAAA", *truePeak);
+        }
+    }
+    
+    float getEnvelope(const float targetReduction, float prevReduction, float attack, float release, float sampleRate) {
+        // Calculate attack and release coefficients
+        float attackCoef = std::pow(10.0f, -1.0f / (attack * sampleRate));
+        float releaseCoef = std::pow(10.0f, -1.0f / (release * sampleRate));
+        float result = 0.0f;
+        // Smooth the gain reduction based on whether it's increasing or decreasing
+        if (targetReduction > prevReduction) {
+            // Release phase: Envelope decays towards the target reduction
+            result = releaseCoef * (targetReduction - prevReduction);
+        } else {
+            // Attack phase: Envelope quickly follows the target reduction
+            result = attackCoef * (targetReduction - prevReduction);
+        }
+        return result;
     }
     
     /**
@@ -236,11 +259,11 @@ public:
 
         float targetEnergy = lufsWindow * lufsTarget * lufsTarget;
         float reduction = 1.0;
-        int oversamplingFactor = 4.0;
+        int oversamplingFactor = osFactors[(int)mOsFactor];
         int filterSize = (int)(mFilterSize * (128 - 3)) + 3;
         
-//        float attack = mAttack;
-//        float release = mRelease;
+        float attack = 1.0f - std::exp((-1.0f * frameCount) / (mAttack * mSampleRate));
+        float release = 1.0f - std::exp((-1.0f * frameCount) / (mRelease * mSampleRate));
         float prevReduction = *gainReduction;
         
         float reds[] = {1.0f, 1.0f};
@@ -254,6 +277,7 @@ public:
         float finalOut = 0.0f;
         
         float truePeak = 0.0f;
+        float prevLimit = *peakReduction;
 //        float finalPeakIn = 0.0f;
 //        float finalPeakOut = 0.0f;
         
@@ -267,21 +291,29 @@ public:
         std::copy_backward(peakReduction, peakReduction + (vizLength - 1), peakReduction + vizLength);
         
         // START TP LIMITER
-        LOG("%d SDFSD", filterSize);
-        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor, filterSize);
+        getTruePeak(&truePeak, inputBuffers, frameCount, 4, 31);
         std::memcpy(inPeaks, &truePeak, sizeof(float));
         *currPeakIn = *inPeaks;
-        if (truePeak > *currPeakMax) {
-            *currPeakMax = truePeak;
+        if (truePeak < 2.0 ) {
+            if (truePeak > *currPeakMax) {
+                *currPeakMax = truePeak;
+            }
+            
+            if (truePeak > tpThresh) {
+                *currPeakRed = tpThresh / truePeak; // Gain factor to bring the peak under threshold
+            } else {
+                *currPeakRed = 1.0f;
+            }
+            
+            if (*currPeakRed < prevLimit) {
+                *currPeakRed = prevLimit + attack * (*currPeakRed - prevLimit);
+            } else {
+                *currPeakRed = prevLimit + release * (*currPeakRed - prevLimit);
+            }
+            
+            *peakReduction = (float)std::clamp(*currPeakRed, 1e-6f, 1.0f);
+            *currPeakRed = *peakReduction;
         }
-        if (truePeak > tpThresh) {
-            *currPeakRed = tpThresh / truePeak; // Gain factor to bring the peak under threshold
-        } else {
-            *currPeakRed = 1.0f;
-        }
-
-        *peakReduction = (float)std::clamp(*currPeakRed, 1e-6f, 1.0f);
-        *currPeakRed = *peakReduction;
         
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             // APPLY LIMITER REDUCTION
@@ -290,9 +322,9 @@ public:
             }
             
             // OUT PEAKS
-            getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, filterSize);
-            std::memcpy(outPeaks, &truePeak, sizeof(float));
-            *currPeakOut = *outPeaks;
+//            getTruePeak(&truePeak, outputBuffers, frameCount, 4, 31);
+//            std::memcpy(outPeaks, &truePeak, sizeof(float));
+//            *currPeakOut = *outPeaks;
             
             
             // LUFFERS BEGIN
@@ -439,6 +471,7 @@ public:
     const int vizLength = 1024;
     double mSampleRate = 44100.0;
     
+    int osFactors[4] = { 2, 4, 8, 16 };
     double mOsFactor = 2.0;
     double mFilterSize = 5.0;
     double mThresh = 1.0;
