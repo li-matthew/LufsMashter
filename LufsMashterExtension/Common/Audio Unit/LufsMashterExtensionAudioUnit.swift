@@ -172,14 +172,14 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
         
         return result
     }
-    
-    public func getIsRecording() -> Bool {
-        guard let val = adapter?.getIsRecording() else {
-            return false
-        }
-        
-        return val
-    }
+//    
+//    public func getIsRecording() -> Bool {
+//        guard let val = adapter?.getIsRecording() else {
+//            return false
+//        }
+//        
+//        return val
+//    }
     
     public func setIsRecording(recording: Bool) {
         adapter!.setIsRecording(recording)
@@ -195,6 +195,14 @@ public class LufsMashterExtensionAudioUnit: AUAudioUnit, @unchecked Sendable
     
     public func setIsReset(reset: Bool) {
         adapter!.setIsReset(reset)
+    }
+    
+    public func setSoftClipOn(state: Bool) {
+        adapter!.setSoftClipOn(state)
+    }
+    
+    public func setHardClipOn(state: Bool) {
+        adapter!.setHardClipOn(state)
     }
     
     public override var inputBusses: AUAudioUnitBusArray {

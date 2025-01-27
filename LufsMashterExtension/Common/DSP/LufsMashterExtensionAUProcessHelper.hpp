@@ -22,6 +22,7 @@
 #include <algorithm>
 
 #include <vector>
+#include <algorithm>
 #include "LufsMashterExtensionDSPKernel.hpp"
 #include "LufsMashterExtensionBufferedAudioBus.hpp"
 //#include "LufsAdapter.hpp"
@@ -99,10 +100,10 @@ public:
     void setIsRecording(bool recording) {
         mIsRecording = recording;
     }
-    
-    const bool& getIsRecording() const {
-        return mIsRecording;
-    }
+//    
+//    const bool& getIsRecording() const {
+//        return mIsRecording;
+//    }
     
     void setIsReset(bool reset) {
         mIsReset = reset;
@@ -111,6 +112,33 @@ public:
     const bool& getIsReset() const {
         return mIsReset;
     }
+    
+    void setSoftClipOn(bool state) {
+        mSoftClipOn = state;
+    }
+    
+    void setHardClipOn(bool state) {
+        mHardClipOn = state;
+    }
+    
+//    void setLookAhead(float ms) {
+//        float temp = mLookAhead;
+//        mLookAhead = ms;
+//        int oldSize = (int)temp * mKernel.mSampleRate;
+//        int newSize = (int)mLookAhead * mKernel.mSampleRate;
+//        
+//        int copySize = (int)std::round(std::min(oldSize, newSize));
+//        
+//        for (int channel = 0; channel < 2; ++channel) {
+//            float* newArray = new float[newSize];
+//            std::fill(newArray, newArray + newSize, 0.0f);
+//            
+//            std::copy(mLookAheadBuffers[channel], mLookAheadBuffers[channel] + (int)copySize, newArray);
+//            delete[] mLookAheadBuffers[channel]; // Free the old array memory
+//
+//            mLookAheadBuffers[channel] = newArray;
+//        }
+//    }
 
     void setChannelCount(UInt32 inputChannelCount, UInt32 outputChannelCount)
     {
@@ -118,6 +146,7 @@ public:
         mOutputBuffers.resize(outputChannelCount);
         mInLufsFrame.resize(inputChannelCount);
         mOutLufsFrame.resize(inputChannelCount);
+        mLookAheadBuffers.resize(inputChannelCount);
         
         mGainReduction = new float[1024];
         mRecordIntegrated = new float[1024];
@@ -137,12 +166,12 @@ public:
         for (int channel = 0; channel < inputChannelCount; ++channel) {
             mInLufsFrame[channel] = new float[132300];
             mOutLufsFrame[channel] = new float[132300];
+            mLookAheadBuffers[channel] = new float[(int)(mKernel.mSampleRate * mLookAhead)];
            
 //            mLookAhead[channel] = new float[441];
             std::fill(mInLufsFrame[channel], mInLufsFrame[channel] + 132300, 0.0f);
             std::fill(mOutLufsFrame[channel], mOutLufsFrame[channel] + 132300, 0.0f);
-            
-//            std::fill(mLookAhead[channel], mLookAhead[channel] + 441, 0.0f);
+            std::fill(mLookAheadBuffers[channel], mLookAheadBuffers[channel] + (int)(mKernel.mSampleRate * mLookAhead), 0.0f);
         }
     }
 
@@ -175,7 +204,7 @@ public:
                 mRecordCount = 0.0f;
             }
             
-            mKernel.process(&currPeakMax, &mIsReset, mRecordIntegrated, &mRecordCount, &mIsRecording, &currIntegrated, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mOutPeaks, mPeakReduction, &currPeakIn, &currPeakOut, &currPeakRed, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
+            mKernel.process(&mLookAhead, mLookAheadBuffers, &mHardClipOn, &mSoftClipOn, &currPeakMax, &mIsReset, mRecordIntegrated, &mRecordCount, &mIsRecording, &currIntegrated, &currRed, &currIn, &currOut, &prevRecording, mInPeaks, mOutPeaks, mPeakReduction, &currPeakIn, &currPeakOut, &currPeakRed, mGainReduction, mInLufsFrame, mOutLufsFrame, mInLuffers, mOutLuffers, mInputBuffers, mOutputBuffers, now, frameCount);
         };
         
         while (framesRemaining > 0) {
@@ -274,8 +303,8 @@ private:
     LufsMashterExtensionDSPKernel& mKernel;
     std::vector<const float*> mInputBuffers;
     std::vector<float*> mOutputBuffers;
-    
-//    std::vector<float*> mLookAhead;
+    std::vector<float*> mLookAheadBuffers;
+    float mLookAhead = 0.05;
     
     float* mInPeaks;
     float* mOutPeaks;
@@ -301,6 +330,8 @@ private:
     float currRed = 1.0;
     float currIntegrated = 0.0;
     
+    bool mSoftClipOn = false;
+    bool mHardClipOn = false;
     bool mIsRecording = false;
     bool mIsReset = false;
     bool prevRecording = false;

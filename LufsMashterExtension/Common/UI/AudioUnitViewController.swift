@@ -61,6 +61,8 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
     var lufsVals: ObservableVals = ObservableVals()
     var tpVals: ObservableVals = ObservableVals()
     
+    var softClipOn: ObservableState = ObservableState()
+    var hardClipOn: ObservableState = ObservableState()
     var isRecording: ObservableState = ObservableState()
     var isReset: ObservableState = ObservableState()
     var toggleView: ObservableState = ObservableState()
@@ -173,6 +175,19 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         return audioUnit.getIsReset()
     }
     
+    public func updateSoftClipOn(state: Bool) {
+        Task { @MainActor in
+            guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+            audioUnit.setSoftClipOn(state: state)
+        }
+    }
+    
+    public func updateHardClipOn(state: Bool) {
+        Task { @MainActor in
+            guard let audioUnit = self.audioUnit as? LufsMashterExtensionAudioUnit else { return }
+            audioUnit.setHardClipOn(state: state)
+        }
+    }
     
     public func updateActions() {
         isRecording.updateAction = { state in
@@ -180,6 +195,13 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         isReset.updateAction = { state in
             self.updateIsReset(state: state)
+        }
+        
+        softClipOn.updateAction = { state in
+            self.updateSoftClipOn(state: state)
+        }
+        hardClipOn.updateAction = { state in
+            self.updateHardClipOn(state: state)
         }
     }
     
@@ -250,7 +272,7 @@ public class AudioUnitViewController: AUViewController, AUAudioUnitFactory {
         }
         
         
-        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers, lufsVals: lufsVals, tpVals: tpVals, isRecording: isRecording, isReset: isReset, toggleView: toggleView)
+        let content = LufsMashterExtensionMainView(parameterTree: observableParameterTree, vizBuffers: vizBuffers, lufsVals: lufsVals, tpVals: tpVals, softClipOn: softClipOn, hardClipOn: hardClipOn, isRecording: isRecording, isReset: isReset, toggleView: toggleView)
         let host = HostingController(rootView: content)
         self.addChild(host)
         host.view.frame = self.view.bounds

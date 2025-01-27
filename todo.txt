@@ -2,7 +2,13 @@ Lookahead
 Latency
 Labels
 
-true peak sometimes is high
+lookahead
+
+harmonic control within limiter via gain reduction curve
+
+tanh soft clipper
+waveshaper
+dynamic saturation bit crush down sample based on gain reduction
 
 float truePeakLimiterWithEffects(float sample, float truePeak, float threshold,
                                   float saturationDrive, int bitDepth,

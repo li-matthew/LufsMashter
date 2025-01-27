@@ -10,6 +10,14 @@ import AudioToolbox
 
 let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
     ParameterGroupSpec(identifier: "global", name: "Global") {
+//        ParameterSpec(
+//            address: .lookahead,
+//            identifier: "lookahead",
+//            name: "lookahead",
+//            units: .generic,
+//            valueRange: 0.001...1.0,
+//            defaultValue: 1.0
+//        )
         ParameterSpec(
             address: .osfactor,
             identifier: "osfactor",
@@ -39,7 +47,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "attack",
             name: "attack",
             units: .generic,
-            valueRange: 0.01...1.0,
+            valueRange: 0.001...1.0,
             defaultValue: 0.05
         )
         ParameterSpec(
@@ -47,7 +55,7 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             identifier: "release",
             name: "release",
             units: .generic,
-            valueRange: 0.01...1.0,
+            valueRange: 0.001...1.0,
             defaultValue: 0.05
         )
         ParameterSpec(

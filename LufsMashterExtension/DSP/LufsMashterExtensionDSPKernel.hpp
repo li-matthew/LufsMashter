@@ -75,6 +75,9 @@ public:
     // MARK: - Parameter Getter / Setter
     void setParameter(AUParameterAddress address, AUValue value) {
         switch (address) {
+//            case LufsMashterExtensionParameterAddress::lookahead:
+//                mLookAhead = value;
+//                break;
             case LufsMashterExtensionParameterAddress::osfactor:
                 mOsFactor = value;
                 break;
@@ -94,6 +97,7 @@ public:
                 mTarget = value;
                 break;
             
+            
 //            case LufsMashterExtensionParameterAddress::knee:
 //                mKnee = value;
 //                break;
@@ -105,6 +109,8 @@ public:
         // Return the goal. It is not thread safe to return the ramping value.
         
         switch (address) {
+//            case LufsMashterExtensionParameterAddress::lookahead:
+//                return (AUValue)mLookAhead;
             case LufsMashterExtensionParameterAddress::osfactor:
                 return (AUValue)mOsFactor;
             case LufsMashterExtensionParameterAddress::filtersize:
@@ -117,6 +123,7 @@ public:
                 return (AUValue)mRelease;
             case LufsMashterExtensionParameterAddress::target:
                 return (AUValue)mTarget;
+            
 //            case LufsMashterExtensionParameterAddress::knee:
 //                return (AUValue)mKnee;
             default: return 0.f;
@@ -209,13 +216,72 @@ public:
         return result;
     }
     
+    void softClip(std::span<float *> buffers, AUAudioFrameCount frameCount, float threshold, int oversamplingFactor) {
+        int oversampleSize = frameCount * oversamplingFactor;
+        
+        for (UInt32 channel = 0; channel < buffers.size(); ++channel) {
+            float* overSamples = new float[oversampleSize];
+            std::fill(overSamples, overSamples + oversampleSize, 0.0f);
+
+            // Oversample the buffer by inserting zeros between each sample
+            for (size_t i = 0; i < frameCount - 1; ++i) {
+                for (int j = 0; j < oversamplingFactor; ++j) {
+                    float alpha = static_cast<float>(j) / oversamplingFactor;
+                    // Linear interpolation between buffers[i] and buffers[i+1]
+                    overSamples[i * oversamplingFactor + j] = buffers[channel][i] + alpha * (buffers[channel][i + 1] - buffers[channel][i]);
+                }
+            }
+            
+            for (int j = 0; j < oversamplingFactor; ++j) {
+                overSamples[(frameCount - 1) * oversamplingFactor + j] = buffers[channel][frameCount - 1];
+            }
+//
+            
+//            for (UInt32 frameIndex = 0; frameIndex < oversampleSize; ++frameIndex) {
+//                float sample = overSamples[frameIndex];
+//                if (fabs(sample) <= threshold) {
+//                    overSamples[frameIndex] = sample - (sample * sample * sample) / (threshold * threshold);
+//                } else {
+//                    overSamples[frameIndex] = threshold * (sample > 0 ? 1.0f : -1.0f);
+//                }
+//            }
+            
+            for (size_t i = 0; i < frameCount; ++i) {
+                float sum = 0.0f;
+                for (int j = 0; j < oversamplingFactor; ++j) {
+                    sum += overSamples[i * oversamplingFactor + j];
+                }
+                buffers[channel][i] = sum / oversamplingFactor;  // Average for downsampling
+            }
+            delete[] overSamples;
+        }
+        
+    }
+
+    void hardClip(std::span<float *> buffers, AUAudioFrameCount frameCount, float threshold) {
+        float sample;
+        for (UInt32 channel = 0; channel < buffers.size(); ++channel) {
+            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+                sample = buffers[channel][frameIndex];
+                if (sample > threshold) {
+                    buffers[channel][frameIndex] = threshold;
+                } else if (sample < -threshold) {
+                    buffers[channel][frameIndex] = -threshold;
+                } else {
+                    buffers[channel][frameIndex] = sample;
+                }
+            }
+        }
+        
+    }
+    
     /**
      MARK: - Internal Process
      
      This function does the core siginal processing.
      Do your custom DSP here.
      */
-    void process(float* currPeakMax, bool* isReset, float* recordIntegrated, float* recordCount, bool* isRecording, float* currIntegrated, float* currRed, float* currIn, float* currOut, bool* prevRecording, float* inPeaks, float* outPeaks, float* peakReduction, float* currPeakIn, float* currPeakOut,  float* currPeakRed, float* gainReduction, std::span<float*>inLufsFrame, std::span<float*> outLufsFrame, float* inLuffers, float* outLuffers, std::span<float const*> inputBuffers, std::span<float*> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
+    void process(float* lookAhead, std::span<float*> lookAheadBuffers, bool* hardClipOn, bool* softClipOn, float* currPeakMax, bool* isReset, float* recordIntegrated, float* recordCount, bool* isRecording, float* currIntegrated, float* currRed, float* currIn, float* currOut, bool* prevRecording, float* inPeaks, float* outPeaks, float* peakReduction, float* currPeakIn, float* currPeakOut,  float* currPeakRed, float* gainReduction, std::span<float*> inLufsFrame, std::span<float*> outLufsFrame, float* inLuffers, float* outLuffers, std::span<float const*> inputBuffers, std::span<float*> outputBuffers, AUEventSampleTime bufferStartTime, AUAudioFrameCount frameCount) {
         
         startTime = std::chrono::high_resolution_clock::now();
         
@@ -250,12 +316,17 @@ public:
         // START
         // Perform per sample dsp on the incoming float in before assigning it to out
         
+        std::vector<float*> clipBuffers;
+        clipBuffers.resize(2);
         std::vector<float*> kFilterBuffers;
         kFilterBuffers.resize(2);
+        
+        int lookAheadSize = (int)(mSampleRate * *lookAhead);
         
         float lufsGate = pow(10, -60 / 10);
         float lufsTarget = pow(10, ((mTarget * 66) - 60) / 20);
         float tpThresh = pow(10, ((mThresh * 66) - 60) / 20);
+        float scThresh = pow(10, (((mThresh * 66) - 60) + 3) / 20);
 
         float targetEnergy = lufsWindow * lufsTarget * lufsTarget;
         float reduction = 1.0;
@@ -290,44 +361,97 @@ public:
         std::copy_backward(outPeaks, outPeaks + (vizLength - 1), outPeaks + vizLength);
         std::copy_backward(peakReduction, peakReduction + (vizLength - 1), peakReduction + vizLength);
         
+        
+        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
+            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex];
+            }
+        }
+//            if (frameCount < lookAheadSize) {
+//                LOG("DSOGIHSDGOPI");
+////                LOG("%f", sizeof(lookAheadBuffers[channel]) / sizeof(float));
+////                for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+////                    outputBuffers[channel][frameIndex] = lookAheadBuffers[channel][lookAheadSize - frameCount + frameIndex];
+////                }
+//                LOG("%f", lookAheadBuffers[channel][lookAheadSize - 1]);
+//               
+//                std::memcpy(outputBuffers[channel], lookAheadBuffers[channel] + (lookAheadSize - frameCount), frameCount * sizeof(float));
+//                std::copy_backward(lookAheadBuffers[channel], lookAheadBuffers[channel] + (lookAheadSize - frameCount), lookAheadBuffers[channel] + lookAheadSize);
+//                std::memcpy(lookAheadBuffers[channel], inputBuffers[channel], frameCount * sizeof(float));
+//                LOG("%f", outputBuffers[channel][0 + frameCount - 1]);
+//                
+//            } else {
+//                LOG("OPIHUPSGDO");
+//                LOG("%f", *lookAhead);
+////                for (UInt32 frameIndex = 0; frameIndex < lookAheadSize; ++frameIndex) {
+////                    outputBuffers[channel][frameIndex] = lookAheadBuffers[channel][frameIndex];
+////                }
+////                for (UInt32 frameIndex = lookAheadSize; frameIndex < frameCount; ++frameIndex) {
+////                    outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex - lookAheadSize];
+////                }
+////                for (UInt32 frameIndex = 0; frameIndex < lookAheadSize; ++frameIndex) {
+////                    lookAheadBuffers[channel][frameIndex] = inputBuffers[channel][frameCount - lookAheadSize];
+////                }
+//            }
+//        }
+//            int copySize = std::max(lookAheadSize, j)
+            
+//
+//            std::copy(inputBuffers[channel], inputBuffers[channel] + frameCount, lookAheadBuffers[channel]);
+        
         // START TP LIMITER
-        getTruePeak(&truePeak, inputBuffers, frameCount, oversamplingFactor, 31);
+        if (*softClipOn) {
+            softClip(outputBuffers, frameCount, scThresh, oversamplingFactor);
+        }
+        getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, 31);
         std::memcpy(inPeaks, &truePeak, sizeof(float));
         *currPeakIn = *inPeaks;
-        if (truePeak < 2.0 ) { // Clamp
-            if (truePeak > *currPeakMax) {
-                *currPeakMax = truePeak;
-            }
-            
-            if (truePeak > tpThresh) {
-                *currPeakRed = tpThresh / truePeak; // Gain factor to bring the peak under threshold
-            } else {
-                *currPeakRed = 1.0f;
-            }
-            
-//            float adaptiveRelease = (1 - *currReduction) 
-            
-            if (*currPeakRed < prevLimit) {
-                *currPeakRed = prevLimit + attack * (*currPeakRed - prevLimit);
-            } else {
-                *currPeakRed = prevLimit + release * (*currPeakRed - prevLimit);
-            }
-            
-            *peakReduction = (float)std::clamp(*currPeakRed, 1e-6f, 1.0f);
-            *currPeakRed = *peakReduction;
+
+//        if (truePeak < 2.0 ) { // Clamp
+        if (truePeak > *currPeakMax) {
+            *currPeakMax = truePeak;
         }
+        
+        // soft clip
+
+        
+        if (truePeak > tpThresh) {
+            *currPeakRed = tpThresh / truePeak; // Gain factor to bring the peak under threshold
+        } else {
+            *currPeakRed = 1.0f;
+        }
+        
+//            float adaptiveRelease = (1 - *currReduction)
+        
+        if (*currPeakRed < prevLimit) {
+            *currPeakRed = prevLimit + attack * (*currPeakRed - prevLimit);
+        } else {
+            *currPeakRed = prevLimit + release * (*currPeakRed - prevLimit);
+        }
+        
+        *peakReduction = (float)std::clamp(*currPeakRed, 1e-6f, 1.0f);
+        *currPeakRed = *peakReduction;
+//        }
         
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             // APPLY LIMITER REDUCTION
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
-                outputBuffers[channel][frameIndex] = inputBuffers[channel][frameIndex] * *currPeakRed;
+                outputBuffers[channel][frameIndex] = outputBuffers[channel][frameIndex] * *currPeakRed;
             }
             
             // OUT PEAKS
             getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, 31);
             std::memcpy(outPeaks, &truePeak, sizeof(float));
             *currPeakOut = *outPeaks;
+        
             
+//        if (*hardClipOn) {
+//            hardClip(outputBuffers, frameCount, tpThresh);
+//        }
+        
+        
+        
+//        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             
             // LUFFERS BEGIN
             if (!kFilterBuffers[channel]) {
@@ -472,6 +596,7 @@ public:
     const int lufsWindow = 132300;
     const int vizLength = 1024;
     double mSampleRate = 44100.0;
+//    std::vector<float*> lookAheadBuffers;
     
     int osFactors[4] = { 2, 4, 8, 16 };
     double mOsFactor = 1.0;
@@ -480,7 +605,7 @@ public:
     double mAttack = 0.5;
     double mRelease = 0.5;
     double mTarget = 1.0;
-
+    double mLookAhead = 0.01;
 //    double mKnee = 12.0;
     
     int stages = 2;

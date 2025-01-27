@@ -144,9 +144,9 @@
     return result;
 }
 
-- (BOOL)getIsRecording {
-    return _processHelper->getIsRecording();
-}
+//- (BOOL)getIsRecording {
+//    return _processHelper->getIsRecording();
+//}
 
 - (void)setIsRecording:(BOOL)recording {
     _processHelper->setIsRecording(recording);
@@ -158,5 +158,13 @@
 
 - (void)setIsReset:(BOOL)reset {
     _processHelper->setIsReset(reset);
+}
+
+- (void)setSoftClipOn:(BOOL)state {
+    _processHelper->setSoftClipOn(state);
+}
+
+- (void)setHardClipOn:(BOOL)state {
+    _processHelper->setHardClipOn(state);
 }
 @end

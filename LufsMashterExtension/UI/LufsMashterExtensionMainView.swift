@@ -15,6 +15,8 @@ struct LufsMashterExtensionMainView: View {
     @ObservedObject var lufsVals: ObservableVals
     @ObservedObject var tpVals: ObservableVals
     
+    @ObservedObject var softClipOn: ObservableState
+    @ObservedObject var hardClipOn: ObservableState
     @ObservedObject var isRecording: ObservableState
     @ObservedObject var isReset: ObservableState
     @ObservedObject var toggleView: ObservableState
@@ -88,6 +90,15 @@ struct LufsMashterExtensionMainView: View {
             }
             
             HStack { // BOTTOM
+//                ParameterKnob(param: parameterTree.global.lookahead, title: "LookAhead")
+                Text("Soft Clip")
+                    .frame(width: 50)
+                    .padding(2)
+                    .background((softClipOn.val) ? Color.red : Color.blue)
+                    .opacity(softClipOn.val ? 0.5 : 1.0)
+                    .onTapGesture {
+                        softClipOn.update(state: !softClipOn.val)
+                    }
                 ParameterSliderDiscrete(param: parameterTree.global.osfactor, title: "Oversampling")
 //                ParameterSlider(param: parameterTree.global.filtersize, title: "Filter Size")
                 
@@ -98,6 +109,14 @@ struct LufsMashterExtensionMainView: View {
 //                Spacer()
 //                ParameterKnob(param: parameterTree.global.knee, title: "Knee")
 //                Spacer()
+                Text("Hard Clip")
+                    .frame(width: 50)
+                    .padding(2)
+                    .background((hardClipOn.val) ? Color.red : Color.blue)
+                    .opacity(hardClipOn.val ? 0.5 : 1.0)
+                    .onTapGesture {
+                        hardClipOn.update(state: !hardClipOn.val)
+                    }
                 Text(toggleView.val ? "LUFS" : "TP")
                     .frame(width: 50)
                     .padding(2)

@@ -39,6 +39,6 @@ struct ParameterKnob: View {
                     Text(String(format: "%.2f", param.value))
                 }
             }
-        }.border(Color.red)
+        }
     }
 }

@@ -25,8 +25,10 @@
 - (NSNumber*)getCurrOut;
 - (NSNumber*)getCurrRed;
 - (NSNumber*)getCurrIntegrated;
-- (BOOL)getIsRecording;
+//- (BOOL)getIsRecording;
 - (void)setIsRecording:(BOOL)recording;
 - (BOOL)getIsReset;
 - (void)setIsReset:(BOOL)reset;
+- (void)setSoftClipOn:(BOOL)state;
+- (void)setHardClipOn:(BOOL)state;
 @end

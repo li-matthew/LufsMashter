@@ -1,5 +1,28 @@
-# Audio Unit Extension
-This template serves as a starting point to create a custom plug-in using the latest Audio Unit standard (AUv3). The AUv3 standard builds on the App Extensions model, which means you deliver your plug-in as an extension that’s contained in an app distributed through the App Store or your own store.
+# LufsMashter Audio Unit
+Free AU true peak limiting and loudness normalizing plugin for macOS. When run, it uses a host app to play an audio file specified in 
+`/LufsMashter/Common/Audio/SimplePlayEngine.swift`, but it also serves as an audio unit that can be integrated into DAWs for audio processing.
+
+## Features
+### True Peak Limiter
+* Optional pre limiter soft clipping at +3db from the threshold
+* Oversampling at 2x/4x/8x/16x
+* True peak limiting with attack and release
+* Optional post limter hard clipper at the threshold
+
+### Loudness Normalizer
+* Calculates integrated LUFS(ITU-R BS.1770-5) of a recorded segment of audio 
+* Applies linear gain reduction to incoming audio to match the integrated lufs to a targeted LUFS value 
+
+* Rolling chart of true peak and LUFS measurements with a toggle to switch between views
+* Measurement readouts
+
+## Prerequisites
+* XCode (>14 recommended)
+* macOS (>Monterey)
+* (Optional) DAW (supports AUv3 extensions)
+
+## Build
+
 
 There are 5 types of Audio Unit Extensions, each type is represented by a four character code.
 
