@@ -96,6 +96,9 @@ public:
             case LufsMashterExtensionParameterAddress::target:
                 mTarget = value;
                 break;
+            case LufsMashterExtensionParameterAddress::makeup:
+                mMakeUp = value;
+                break;
             
             
 //            case LufsMashterExtensionParameterAddress::knee:
@@ -123,6 +126,8 @@ public:
                 return (AUValue)mRelease;
             case LufsMashterExtensionParameterAddress::target:
                 return (AUValue)mTarget;
+            case LufsMashterExtensionParameterAddress::makeup:
+                return (AUValue)mMakeUp;
             
 //            case LufsMashterExtensionParameterAddress::knee:
 //                return (AUValue)mKnee;
@@ -327,6 +332,7 @@ public:
         float lufsTarget = pow(10, ((mTarget * 66) - 60) / 20);
         float tpThresh = pow(10, ((mThresh * 66) - 60) / 20);
         float scThresh = pow(10, (((mThresh * 66) - 60) + 3) / 20);
+        float makeup = pow(10, ((mMakeUp * 12) - 6) / 20);
 
         float targetEnergy = lufsWindow * lufsTarget * lufsTarget;
         float reduction = 1.0;
@@ -400,6 +406,7 @@ public:
 //            std::copy(inputBuffers[channel], inputBuffers[channel] + frameCount, lookAheadBuffers[channel]);
         
         // START TP LIMITER
+        LOG("SDGSDGHSDG%d", oversamplingFactor);
         if (*softClipOn) {
             softClip(outputBuffers, frameCount, scThresh, oversamplingFactor);
         }
@@ -438,20 +445,28 @@ public:
             for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
                 outputBuffers[channel][frameIndex] = outputBuffers[channel][frameIndex] * *currPeakRed;
             }
+        }
             
+       
             // OUT PEAKS
             getTruePeak(&truePeak, outputBuffers, frameCount, oversamplingFactor, 31);
             std::memcpy(outPeaks, &truePeak, sizeof(float));
             *currPeakOut = *outPeaks;
         
-            
-//        if (*hardClipOn) {
-//            hardClip(outputBuffers, frameCount, tpThresh);
-//        }
+        if (*hardClipOn) {
+            hardClip(outputBuffers, frameCount, tpThresh);
+        }
+        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
+            // APPLY LIMITER REDUCTION
+            for (UInt32 frameIndex = 0; frameIndex < frameCount; ++frameIndex) {
+                outputBuffers[channel][frameIndex] = std::min((outputBuffers[channel][frameIndex] * makeup), 1.0f);
+            }
+        }
         
         
         
-//        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
+        
+        for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             
             // LUFFERS BEGIN
             if (!kFilterBuffers[channel]) {
@@ -606,6 +621,7 @@ public:
     double mRelease = 0.5;
     double mTarget = 1.0;
     double mLookAhead = 0.01;
+    double mMakeUp = 0.0;
 //    double mKnee = 12.0;
     
     int stages = 2;

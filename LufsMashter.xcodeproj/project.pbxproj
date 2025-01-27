@@ -87,6 +87,11 @@
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		9D77E79A2D4840D7006B5324 /* img */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = img;
+			sourceTree = "<group>";
+		};
 		9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LufsMashter;
@@ -152,6 +157,7 @@
 		9D8F9CC82D0BB7C100E53EB3 = {
 			isa = PBXGroup;
 			children = (
+				9D77E79A2D4840D7006B5324 /* img */,
 				9D77E7822D4830B3006B5324 /* README.md */,
 				9D68ADA92D2B691A006C5FED /* todo.txt */,
 				9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */,
@@ -199,6 +205,7 @@
 				9D8F9D132D0BB7C200E53EB3 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
+				9D77E79A2D4840D7006B5324 /* img */,
 				9D8F9CD32D0BB7C100E53EB3 /* LufsMashter */,
 			);
 			name = LufsMashter;

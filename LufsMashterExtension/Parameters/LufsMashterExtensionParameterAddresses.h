@@ -15,7 +15,8 @@ typedef NS_ENUM(AUParameterAddress, LufsMashterExtensionParameterAddress) {
     thresh = 2,
     attack = 3,
     release = 4,
-    target = 5
+    target = 5,
+    makeup = 6
 //    lookahead = 6
 //    knee = 4
 };

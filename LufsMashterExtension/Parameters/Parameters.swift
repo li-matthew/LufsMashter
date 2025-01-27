@@ -66,6 +66,14 @@ let LufsMashterExtensionParameterSpecs = ParameterTreeSpec {
             valueRange: 0.0...1.0,
             defaultValue: 1.0
         )
+        ParameterSpec(
+            address: .makeup,
+            identifier: "makeup",
+            name: "makeup",
+            units: .generic,
+            valueRange: 0.0...1.0,
+            defaultValue: 0.0
+        )
 //
 //        ParameterSpec(
 //            address: .knee,

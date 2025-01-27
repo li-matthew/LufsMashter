@@ -24,8 +24,8 @@ struct ParameterSliderDiscrete: View {
                 .frame(width: 100,
                        height: 10)
             Spacer()
-            Text(String(format: "%.2f", param.value))
-        }.border(Color.red)
+//            Text(String(format: "%.2f", param.value))
+        }
             
     }
     

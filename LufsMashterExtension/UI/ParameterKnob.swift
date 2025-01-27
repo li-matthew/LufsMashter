@@ -35,6 +35,8 @@ struct ParameterKnob: View {
                     Text(String(format: "%.2f dB", (66 * (param.value)) - 60))
                 } else if (param.displayName == "attack" || param.displayName == "release") {
                     Text(String(format: "%.2f ms", param.value * 1000))
+                } else if (param.displayName == "makeup") {
+                    Text(String(format: "%.2f dB", (12 * (param.value)) - 6))
                 } else {
                     Text(String(format: "%.2f", param.value))
                 }

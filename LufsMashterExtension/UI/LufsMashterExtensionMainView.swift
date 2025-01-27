@@ -117,6 +117,7 @@ struct LufsMashterExtensionMainView: View {
                     .onTapGesture {
                         hardClipOn.update(state: !hardClipOn.val)
                     }
+                ParameterKnob(param: parameterTree.global.makeup, title: "MakeUp")
                 Text(toggleView.val ? "LUFS" : "TP")
                     .frame(width: 50)
                     .padding(2)
