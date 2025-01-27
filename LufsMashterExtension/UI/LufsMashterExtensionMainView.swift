@@ -38,10 +38,10 @@ struct LufsMashterExtensionMainView: View {
                 HStack { // Rolling View
                     if let metalLufs = metalLufs {
                         MetalLufsView(metalLufs: metalLufs, target: parameterTree.global.target, thresh: parameterTree.global.thresh, view: $toggleView.val)
-                            .frame(width: 800, height: 400)
+                            .frame(width: 700, height: 400)
                     } else {
                         Text("Initializing Metal View...")
-                            .frame(width: 800, height: 400)
+                            .frame(width: 700, height: 400)
                     }
                 }
                 .padding()
@@ -61,8 +61,8 @@ struct LufsMashterExtensionMainView: View {
                     Spacer()
                     DataView(param: parameterTree.global.target, val: $tpVals.vals[1], section: "TP", title: "DELTA", units: "dB")
                     Spacer()
-                    DataView(param: parameterTree.global.target, val: $tpVals.vals[3], section: "TP", title: "MAX", units: "dB")
-                    Spacer()
+//                    DataView(param: parameterTree.global.target, val: $tpVals.vals[3], section: "TP", title: "MAX", units: "dB")
+//                    Spacer()
                 }
                 
                 VStack { // LUFFER READOUT
@@ -84,7 +84,7 @@ struct LufsMashterExtensionMainView: View {
             }
             .onAppear {
                 if metalLufs == nil {
-                    metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 800, height: 400), target: parameterTree.global.target, isRecording: isRecording, toggleView: toggleView)
+                    metalLufs = MetalLufs(frame: CGRect(x: 0, y: 0, width: 700, height: 400), target: parameterTree.global.target, isRecording: isRecording, toggleView: toggleView)
                 }
                 metalLufs?.metalView = vizBuffers
             }

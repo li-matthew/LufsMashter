@@ -463,9 +463,6 @@ public:
             }
         }
         
-        
-        
-        
         for (UInt32 channel = 0; channel < inputBuffers.size(); ++channel) {
             
             // LUFFERS BEGIN

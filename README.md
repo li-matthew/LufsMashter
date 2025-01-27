@@ -37,5 +37,6 @@ cd LufsMashter
     * Copy the `.appex` file to `/Library/Audio/Plug-Ins/Components`
 
 ## Usage
+![Alt text](img/limiter.png)
 * The plugin starts in the true peak limiter, with the graph representing -60dB to +6dB. The input peaks are charted in gray, the output peaks in green, and the amount of linear gain reduction in blue from ~0.0 to 1.0. The bottom row includes options to turn soft clipping on (red), select an oversampling factor, adjust the attack and release of the limiter, and to turn hard clipping on.
 * Toggling the TP to LUFS changes the view to chart the LUFS from -60LUFS to +6LUFS with the same color scheme. The single parameter for this view is setting a target LUFS value. Now when using the start button to record a segment of audio, the integrated lufs for that segment of audio will begin calculating along with the linear gain reduction required to match it to the target LUFS. The gain reduction will then be applied to the incoming audio in real time, until the user presses stop, locking in the gain reduction factor. The reduction will continue to be applied until the user presses the reset button.
